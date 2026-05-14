@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 游戏大事件日历 | Gaming History Calendar</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0e1117;--card:#161b22;--card2:#1c2333;--border:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--accent:#58a6ff;--accent2:#1f6feb;
+  --game:#3fb950;--console:#f78166;--event:#d2a8ff;--milestone:#f0c000;
+  --hover:#21262d;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;min-height:100vh}
+.header{text-align:center;padding:30px 20px 20px;border-bottom:1px solid var(--border)}
+.header h1{font-size:1.8em;background:linear-gradient(90deg,var(--accent),var(--event),var(--game));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.header p{color:var(--text2);font-size:.9em}
+.filters{display:flex;justify-content:center;gap:10px;padding:16px 20px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:.85em;transition:.2s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.1)}
+.filter-btn[data-type="game"].active{border-color:var(--game);color:var(--game);background:rgba(63,185,80,.1)}
+.filter-btn[data-type="console"].active{border-color:var(--console);color:var(--console);background:rgba(247,129,102,.1)}
+.filter-btn[data-type="event"].active{border-color:var(--event);color:var(--event);background:rgba(210,168,255,.1)}
+.filter-btn[data-type="milestone"].active{border-color:var(--milestone);color:var(--milestone);background:rgba(240,192,0,.1)}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px}
+.month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
+.month-nav button:hover{background:var(--accent2);border-color:var(--accent)}
+.month-nav .month-label{font-size:1.3em;font-weight:700;min-width:120px;text-align:center}
+.calendar-container{max-width:900px;margin:0 auto;padding:10px 16px 40px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-head{text-align:center;font-size:.8em;color:var(--text2);padding:8px 0;font-weight:600}
+.cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;position:relative;transition:.15s;border:1px solid transparent;min-height:60px}
+.cal-cell.has-events{cursor:pointer;background:var(--card);border-color:var(--border)}
+.cal-cell.has-events:hover{background:var(--hover);border-color:var(--accent);transform:scale(1.05);z-index:2}
+.cal-cell.today{border:2px solid var(--accent) !important;box-shadow:0 0 12px rgba(88,166,255,.3)}
+.cal-cell .day-num{font-size:1em;font-weight:500}
+.cal-cell.empty .day-num{color:var(--border)}
+.cal-cell .dots{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.game{background:var(--game)}.dot.console{background:var(--console)}.dot.event{background:var(--event)}.dot.milestone{background:var(--milestone)}
+.cal-cell .event-count{font-size:.7em;color:var(--text2);margin-top:2px}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;padding:0}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);border-radius:16px 16px 0 0;z-index:1}
+.modal-header h2{font-size:1.2em}
+.modal-close{background:none;border:none;color:var(--text2);font-size:1.5em;cursor:pointer;padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--hover);color:var(--text)}
+.modal-body{padding:16px 24px 24px}
+.event-card{padding:14px;border-radius:10px;background:var(--card2);margin-bottom:10px;cursor:pointer;transition:.2s;border:1px solid transparent}
+.event-card:hover{border-color:var(--accent);transform:translateX(4px)}
+.event-card:last-child{margin-bottom:0}
+.event-card .event-year{font-size:.8em;color:var(--text2);margin-bottom:4px}
+.event-card .event-title{font-size:1.05em;font-weight:600;margin-bottom:2px}
+.event-card .event-title-en{font-size:.85em;color:var(--text2);margin-bottom:6px}
+.event-card .event-desc{font-size:.88em;color:var(--text2);line-height:1.5}
+.event-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:600;margin-left:6px;vertical-align:middle}
+.event-tag.game{background:rgba(63,185,80,.15);color:var(--game)}
+.event-tag.console{background:rgba(247,129,102,.15);color:var(--console)}
+.event-tag.event{background:rgba(210,168,255,.15);color:var(--event)}
+.event-tag.milestone{background:rgba(240,192,0,.15);color:var(--milestone)}
+.link-icon{font-size:.8em;margin-left:4px;opacity:.5}
+
+/* Stats bar */
+.stats{text-align:center;padding:8px;color:var(--text2);font-size:.82em}
+
+@media(max-width:600px){
+  .cal-cell{min-height:44px;border-radius:6px}
+  .cal-cell .day-num{font-size:.85em}
+  .dot{width:5px;height:5px}
+  .header h1{font-size:1.3em}
+  .modal{max-width:100%;border-radius:12px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎮 游戏大事件日历</h1>
+  <p>Gaming History Calendar · 1980s – Present</p>
+</div>
+<div class="filters">
+  <button class="filter-btn active" data-type="all">全部</button>
+  <button class="filter-btn" data-type="game">🎮 游戏发售</button>
+  <button class="filter-btn" data-type="console">🕹️ 主机发售</button>
+  <button class="filter-btn" data-type="event">📅 展会活动</button>
+  <button class="filter-btn" data-type="milestone">⭐ 里程碑</button>
+</div>
+<div class="stats" id="stats"></div>
+<div class="month-nav">
+  <button id="prevMonth">◀ 上月</button>
+  <span class="month-label" id="monthLabel"></span>
+  <button id="nextMonth">下月 ▶</button>
+</div>
+<div class="calendar-container">
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const EVENTS=[{"month": 1, "day": 1, "year": 1985, "title_cn": "任天堂红白机", "title_en": "Famicom/NES", "type": "console", "desc": "FC在北美以NES名称发售，开启家用主机新时代", "wiki": "https://en.wikipedia.org/wiki/Nintendo_Entertainment_System"}, {"month": 1, "day": 9, "year": 2007, "title_cn": "初代iPhone发布", "title_en": "iPhone Announcement", "type": "milestone", "desc": "乔布斯发布iPhone，移动游戏时代的序幕", "wiki": "https://en.wikipedia.org/wiki/IPhone_(1st_generation)"}, {"month": 1, "day": 13, "year": 2000, "title_cn": "世嘉退出硬件市场", "title_en": "Sega Exits Hardware", "type": "milestone", "desc": "世嘉宣布停产Dreamcast，退出家用主机市场", "wiki": "https://en.wikipedia.org/wiki/Dreamcast"}, {"month": 1, "day": 14, "year": 2009, "title_cn": "《恶魔之魂》", "title_en": "Demon's Souls", "type": "game", "desc": "FromSoftware魂系列开山之作在日本发售", "wiki": "https://en.wikipedia.org/wiki/Demon%27s_Souls"}, {"month": 1, "day": 21, "year": 2000, "title_cn": "《生化危机 代号：维罗妮卡》", "title_en": "Resident Evil CODE: Veronica", "type": "game", "desc": "系列首部128位主机作品在Dreamcast发售", "wiki": "https://en.wikipedia.org/wiki/Resident_Evil_%E2%80%93_Code:_Veronica"}, {"month": 1, "day": 26, "year": 2010, "title_cn": "《质量效应2》", "title_en": "Mass Effect 2", "type": "game", "desc": "BioWare科幻RPG巅峰之作发售", "wiki": "https://en.wikipedia.org/wiki/Mass_Effect_2"}, {"month": 1, "day": 27, "year": 1998, "title_cn": "《生化危机2》", "title_en": "Resident Evil 2", "type": "game", "desc": "卡普空经典生存恐怖续作在PS1发售", "wiki": "https://en.wikipedia.org/wiki/Resident_Evil_2"}, {"month": 1, "day": 31, "year": 2006, "title_cn": "《旺达与巨像》", "title_en": "Shadow of the Colossus", "type": "game", "desc": "上田文人执导的PS2经典在北美发售", "wiki": "https://en.wikipedia.org/wiki/Shadow_of_the_Colossus"}, {"month": 2, "day": 1, "year": 2005, "title_cn": "《战神》", "title_en": "God of War", "type": "game", "desc": "圣莫尼卡工作室开创性动作游戏在PS2发售", "wiki": "https://en.wikipedia.org/wiki/God_of_War_(2005_video_game)"}, {"month": 2, "day": 4, "year": 2003, "title_cn": "《塞尔达传说：风之杖》", "title_en": "The Legend of Zelda: The Wind Waker", "type": "game", "desc": "塞尔达系列卡通渲染风格作品在NGC日本发售", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_The_Wind_Waker"}, {"month": 2, "day": 10, "year": 2009, "title_cn": "《街头霸王IV》", "title_en": "Street Fighter IV", "type": "game", "desc": "卡普空格斗经典系列回归之作在北美发售", "wiki": "https://en.wikipedia.org/wiki/Street_Fighter_IV"}, {"month": 2, "day": 12, "year": 2004, "title_cn": "任天堂DS", "title_en": "Nintendo DS", "type": "console", "desc": "任天堂双屏掌机在日本发售", "wiki": "https://en.wikipedia.org/wiki/Nintendo_DS"}, {"month": 2, "day": 14, "year": 2024, "title_cn": "《最终幻想VII 重生》", "title_en": "Final Fantasy VII Rebirth", "type": "game", "desc": "SE最终幻想VII重制三部曲第二部发售", "wiki": "https://en.wikipedia.org/wiki/Final_Fantasy_VII_Rebirth"}, {"month": 2, "day": 20, "year": 2018, "title_cn": "《怪物猎人：世界》", "title_en": "Monster Hunter: World", "type": "game", "desc": "卡普空怪猎系列首部全球大卖作品PC版发售", "wiki": "https://en.wikipedia.org/wiki/Monster_Hunter:_World"}, {"month": 2, "day": 21, "year": 1986, "title_cn": "《塞尔达传说》", "title_en": "The Legend of Zelda", "type": "game", "desc": "任天堂传奇系列首作在日本FC磁碟机发售", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda_(video_game)"}, {"month": 2, "day": 22, "year": 2011, "title_cn": "PlayStation Vita", "title_en": "PlayStation Vita", "type": "console", "desc": "索尼次世代掌机PSV在日本发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_Vita"}, {"month": 2, "day": 25, "year": 2022, "title_cn": "《艾尔登法环》", "title_en": "Elden Ring", "type": "game", "desc": "FromSoftware与宫崎英高、乔治·R·R·马丁合作的开放世界魂系巨作发售", "wiki": "https://en.wikipedia.org/wiki/Elden_Ring"}, {"month": 2, "day": 27, "year": 1996, "title_cn": "《宝可梦 红/绿》", "title_en": "Pokémon Red/Green", "type": "game", "desc": "Game Freak开创性RPG在日本Game Boy发售，全球现象的起点", "wiki": "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Red_and_Blue"}, {"month": 3, "day": 3, "year": 2017, "title_cn": "任天堂Switch", "title_en": "Nintendo Switch", "type": "console", "desc": "任天堂划时代混合型主机全球发售", "wiki": "https://en.wikipedia.org/wiki/Nintendo_Switch"}, {"month": 3, "day": 3, "year": 2017, "title_cn": "《塞尔达传说：旷野之息》", "title_en": "The Legend of Zelda: Breath of the Wild", "type": "game", "desc": "塞尔达系列革命性开放世界作品随Switch首发", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Breath_of_the_Wild"}, {"month": 3, "day": 4, "year": 2000, "title_cn": "PlayStation 2", "title_en": "PlayStation 2", "type": "console", "desc": "史上最畅销游戏主机PS2在日本发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_2"}, {"month": 3, "day": 8, "year": 2005, "title_cn": "PlayStation Portable", "title_en": "PSP", "type": "console", "desc": "索尼首款掌机PSP在北美发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_Portable"}, {"month": 3, "day": 13, "year": 1985, "title_cn": "《超级马力欧兄弟》", "title_en": "Super Mario Bros.", "type": "game", "desc": "宫本茂创作的平台游戏巅峰之作在日本发售", "wiki": "https://en.wikipedia.org/wiki/Super_Mario_Bros."}, {"month": 3, "day": 20, "year": 2020, "title_cn": "《集合啦！动物森友会》", "title_en": "Animal Crossing: New Horizons", "type": "game", "desc": "疫情期间全球大热的任天堂生活模拟游戏发售", "wiki": "https://en.wikipedia.org/wiki/Animal_Crossing:_New_Horizons"}, {"month": 3, "day": 22, "year": 2022, "title_cn": "GDC 2022", "title_en": "GDC 2022", "type": "event", "desc": "游戏开发者大会2022在旧金山举办", "wiki": "https://en.wikipedia.org/wiki/Game_Developers_Conference"}, {"month": 3, "day": 28, "year": 2006, "title_cn": "《上古卷轴IV：湮没》", "title_en": "The Elder Scrolls IV: Oblivion", "type": "game", "desc": "Bethesda开放世界RPG在Xbox 360和PC发售", "wiki": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_IV:_Oblivion"}, {"month": 3, "day": 31, "year": 1998, "title_cn": "《星际争霸》", "title_en": "StarCraft", "type": "game", "desc": "暴雪经典即时战略游戏发售，电竞史上里程碑", "wiki": "https://en.wikipedia.org/wiki/StarCraft_(video_game)"}, {"month": 4, "day": 2, "year": 2014, "title_cn": "《黑暗之魂II》", "title_en": "Dark Souls II", "type": "game", "desc": "FromSoftware魂系列第二部正统续作发售", "wiki": "https://en.wikipedia.org/wiki/Dark_Souls_II"}, {"month": 4, "day": 14, "year": 2015, "title_cn": "《血源诅咒》", "title_en": "Bloodborne", "type": "game", "desc": "宫崎英高执导的PS4独占哥特式动作RPG发售", "wiki": "https://en.wikipedia.org/wiki/Bloodborne"}, {"month": 4, "day": 20, "year": 2018, "title_cn": "《战神》(2018)", "title_en": "God of War (2018)", "type": "game", "desc": "圣莫尼卡工作室重启战神系列，北欧神话新篇章", "wiki": "https://en.wikipedia.org/wiki/God_of_War_(2018_video_game)"}, {"month": 4, "day": 21, "year": 1989, "title_cn": "Game Boy", "title_en": "Game Boy", "type": "console", "desc": "任天堂经典掌机在日本发售，掌机游戏时代开启", "wiki": "https://en.wikipedia.org/wiki/Game_Boy"}, {"month": 4, "day": 23, "year": 1990, "title_cn": "《超级马力欧世界》", "title_en": "Super Mario World", "type": "game", "desc": "超任/SFC首发护航大作，系列巅峰之一", "wiki": "https://en.wikipedia.org/wiki/Super_Mario_World"}, {"month": 4, "day": 26, "year": 2016, "title_cn": "《神秘海域4：盗贼末路》", "title_en": "Uncharted 4: A Thief's End", "type": "game", "desc": "顽皮狗动作冒险系列完结篇在PS4发售", "wiki": "https://en.wikipedia.org/wiki/Uncharted_4:_A_Thief%27s_End"}, {"month": 4, "day": 27, "year": 2010, "title_cn": "《荒野大镖客：救赎》", "title_en": "Red Dead Redemption", "type": "game", "desc": "R星西部开放世界大作在PS3/X360发售", "wiki": "https://en.wikipedia.org/wiki/Red_Dead_Redemption"}, {"month": 4, "day": 29, "year": 2003, "title_cn": "《真·三国无双3》", "title_en": "Dynasty Warriors 4", "type": "game", "desc": "光荣割草游戏系列经典之作", "wiki": "https://en.wikipedia.org/wiki/Dynasty_Warriors_4"}, {"month": 5, "day": 5, "year": 2023, "title_cn": "《塞尔达传说：王国之泪》", "title_en": "The Legend of Zelda: Tears of the Kingdom", "type": "game", "desc": "旷野之息续作发售，开放世界新高度", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Tears_of_the_Kingdom"}, {"month": 5, "day": 10, "year": 2016, "title_cn": "《守望先锋》", "title_en": "Overwatch", "type": "game", "desc": "暴雪首款FPS团队射击游戏正式发售", "wiki": "https://en.wikipedia.org/wiki/Overwatch_(video_game)"}, {"month": 5, "day": 12, "year": 2023, "title_cn": "E3 2023取消", "title_en": "E3 2023 Cancelled", "type": "milestone", "desc": "E3展会正式宣布取消，标志游戏展会时代变迁", "wiki": "https://en.wikipedia.org/wiki/E3"}, {"month": 5, "day": 15, "year": 2014, "title_cn": "《马力欧赛车8》", "title_en": "Mario Kart 8", "type": "game", "desc": "任天堂经典赛车游戏系列最新作在Wii U发售", "wiki": "https://en.wikipedia.org/wiki/Mario_Kart_8"}, {"month": 5, "day": 19, "year": 2015, "title_cn": "《巫师3：狂猎》", "title_en": "The Witcher 3: Wild Hunt", "type": "game", "desc": "CD Projekt RED开放世界RPG巨作发售，年度游戏", "wiki": "https://en.wikipedia.org/wiki/The_Witcher_3:_Wild_Hunt"}, {"month": 5, "day": 24, "year": 2002, "title_cn": "初代Xbox在日本发售", "title_en": "Xbox Japan Launch", "type": "console", "desc": "微软Xbox主机登陆日本市场", "wiki": "https://en.wikipedia.org/wiki/Xbox_(console)"}, {"month": 5, "day": 26, "year": 2020, "title_cn": "《异度神剑 终极版》", "title_en": "Xenoblade Chronicles: Definitive Edition", "type": "game", "desc": "Monolith Soft经典JRPG重制版在Switch发售", "wiki": "https://en.wikipedia.org/wiki/Xenoblade_Chronicles:_Definitive_Edition"}, {"month": 5, "day": 29, "year": 1993, "title_cn": "《最终幻想V》", "title_en": "Final Fantasy V", "type": "game", "desc": "SE（原史克威尔）经典RPG续作在SFC发售", "wiki": "https://en.wikipedia.org/wiki/Final_Fantasy_V"}, {"month": 6, "day": 1, "year": 2001, "title_cn": "《暗黑破坏神II：毁灭之王》", "title_en": "Diablo II: Lord of Destruction", "type": "game", "desc": "暴雪经典ARPG资料片发售", "wiki": "https://en.wikipedia.org/wiki/Diablo_II:_Lord_of_Destruction"}, {"month": 6, "day": 5, "year": 1995, "title_cn": "E3首届", "title_en": "First E3", "type": "event", "desc": "首届电子娱乐博览会在洛杉矶举办", "wiki": "https://en.wikipedia.org/wiki/E3_1995"}, {"month": 6, "day": 11, "year": 2002, "title_cn": "《王国之心》", "title_en": "Kingdom Hearts", "type": "game", "desc": "史克威尔与迪士尼合作RPG在日本PS2发售", "wiki": "https://en.wikipedia.org/wiki/Kingdom_Hearts_(video_game)"}, {"month": 6, "day": 12, "year": 2019, "title_cn": "E3 2019", "title_en": "E3 2019", "type": "event", "desc": "E3 2019在洛杉矶举办，多款重磅游戏公布", "wiki": "https://en.wikipedia.org/wiki/E3_2019"}, {"month": 6, "day": 14, "year": 2005, "title_cn": "《吉他英雄》", "title_en": "Guitar Hero", "type": "game", "desc": "开创音乐游戏热潮的经典之作发售", "wiki": "https://en.wikipedia.org/wiki/Guitar_Hero_(video_game)"}, {"month": 6, "day": 19, "year": 2018, "title_cn": "《堡垒之夜》登陆Switch", "title_en": "Fortnite on Switch", "type": "milestone", "desc": "Epic大逃杀现象级游戏登陆任天堂Switch", "wiki": "https://en.wikipedia.org/wiki/Fortnite_Battle_Royale"}, {"month": 6, "day": 23, "year": 1996, "title_cn": "任天堂64", "title_en": "Nintendo 64", "type": "console", "desc": "任天堂第三代家用主机N64在日本发售", "wiki": "https://en.wikipedia.org/wiki/Nintendo_64"}, {"month": 6, "day": 23, "year": 1996, "title_cn": "《超级马力欧64》", "title_en": "Super Mario 64", "type": "game", "desc": "3D平台游戏开山之作，随N64首发", "wiki": "https://en.wikipedia.org/wiki/Super_Mario_64"}, {"month": 6, "day": 29, "year": 2000, "title_cn": "《暗黑破坏神II》", "title_en": "Diablo II", "type": "game", "desc": "暴雪经典ARPG系列第二部发售", "wiki": "https://en.wikipedia.org/wiki/Diablo_II"}, {"month": 7, "day": 1, "year": 1983, "title_cn": "《大金刚》街机", "title_en": "Donkey Kong (Arcade)", "type": "game", "desc": "宫本茂设计的经典街机游戏，马力欧首次登场", "wiki": "https://en.wikipedia.org/wiki/Donkey_Kong_(video_game)"}, {"month": 7, "day": 7, "year": 1999, "title_cn": "《超级粉碎兄弟》", "title_en": "Super Smash Bros.", "type": "game", "desc": "任天堂全明星格斗游戏初代在日本N64发售", "wiki": "https://en.wikipedia.org/wiki/Super_Smash_Bros._(video_game)"}, {"month": 7, "day": 15, "year": 1983, "title_cn": "FC/红白机", "title_en": "Family Computer", "type": "console", "desc": "任天堂红白机在日本发售，拯救了北美游戏市场崩溃", "wiki": "https://en.wikipedia.org/wiki/Nintendo_Entertainment_System"}, {"month": 7, "day": 17, "year": 2020, "title_cn": "《对马岛之魂》", "title_en": "Ghost of Tsushima", "type": "game", "desc": "Sucker Punch开放世界武士动作游戏在PS4发售", "wiki": "https://en.wikipedia.org/wiki/Ghost_of_Tsushima"}, {"month": 7, "day": 21, "year": 2017, "title_cn": "《斯普拉遁2》", "title_en": "Splatoon 2", "type": "game", "desc": "任天堂彩墨射击游戏续作在Switch发售", "wiki": "https://en.wikipedia.org/wiki/Splatoon_2"}, {"month": 7, "day": 25, "year": 2005, "title_cn": "Steam", "title_en": "Steam", "type": "milestone", "desc": "Valve的Steam平台开始向第三方开发者开放", "wiki": "https://en.wikipedia.org/wiki/Steam_(service)"}, {"month": 7, "day": 29, "year": 2016, "title_cn": "《精灵宝可梦GO》", "title_en": "Pokémon GO", "type": "game", "desc": "Niantic AR手游在日本上线，全球现象级游戏", "wiki": "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Go"}, {"month": 8, "day": 6, "year": 2024, "title_cn": "Gamescom 2024", "title_en": "Gamescom 2024", "type": "event", "desc": "欧洲最大游戏展会Gamescom在科隆开幕", "wiki": "https://en.wikipedia.org/wiki/Gamescom"}, {"month": 8, "day": 14, "year": 2007, "title_cn": "《生化奇兵》", "title_en": "BioShock", "type": "game", "desc": "Irrational Games沉浸式射击经典在X360/PC发售", "wiki": "https://en.wikipedia.org/wiki/BioShock"}, {"month": 8, "day": 21, "year": 2012, "title_cn": "《反恐精英：全球攻势》", "title_en": "Counter-Strike: Global Offensive", "type": "game", "desc": "Valve经典FPS续作CS:GO发售", "wiki": "https://en.wikipedia.org/wiki/Counter-Strike:_Global_Offensive"}, {"month": 8, "day": 24, "year": 2004, "title_cn": "《末日之战》", "title_en": "Doom 3", "type": "game", "desc": "id Software经典FPS系列第三部发售", "wiki": "https://en.wikipedia.org/wiki/Doom_3"}, {"month": 8, "day": 25, "year": 2017, "title_cn": "《全面战争：战锤II》", "title_en": "Total War: Warhammer II", "type": "game", "desc": "Creative Assembly策略大作续作发售", "wiki": "https://en.wikipedia.org/wiki/Total_War:_Warhammer_II"}, {"month": 9, "day": 1, "year": 1998, "title_cn": "《潜龙谍影》", "title_en": "Metal Gear Solid", "type": "game", "desc": "小岛秀夫潜行动作经典之作在日本PS1发售", "wiki": "https://en.wikipedia.org/wiki/Metal_Gear_Solid"}, {"month": 9, "day": 9, "year": 1995, "title_cn": "PlayStation", "title_en": "PlayStation", "type": "console", "desc": "索尼初代PlayStation在北美发售，改变游戏业格局", "wiki": "https://en.wikipedia.org/wiki/PlayStation_(console)"}, {"month": 9, "day": 9, "year": 1999, "title_cn": "世嘉Dreamcast", "title_en": "Sega Dreamcast", "type": "console", "desc": "世嘉最后一款家用主机在北美发售", "wiki": "https://en.wikipedia.org/wiki/Dreamcast"}, {"month": 9, "day": 12, "year": 2006, "title_cn": "TGS 2006", "title_en": "Tokyo Game Show 2006", "type": "event", "desc": "东京电玩展2006开幕", "wiki": "https://en.wikipedia.org/wiki/Tokyo_Game_Show"}, {"month": 9, "day": 13, "year": 1985, "title_cn": "《超级马力欧兄弟》", "title_en": "Super Mario Bros.", "type": "game", "desc": "FC/NES平台游戏传奇之作在日本发售", "wiki": "https://en.wikipedia.org/wiki/Super_Mario_Bros."}, {"month": 9, "day": 14, "year": 2007, "title_cn": "《光环3》", "title_en": "Halo 3", "type": "game", "desc": "Bungie经典FPS三部曲终章在Xbox 360发售", "wiki": "https://en.wikipedia.org/wiki/Halo_3"}, {"month": 9, "day": 17, "year": 2013, "title_cn": "《侠盗猎车手V》", "title_en": "Grand Theft Auto V", "type": "game", "desc": "R星开放世界巨作GTA5在PS3/X360发售，史上最畅销游戏之一", "wiki": "https://en.wikipedia.org/wiki/Grand_Theft_Auto_V"}, {"month": 9, "day": 20, "year": 2016, "title_cn": "TGS 2016", "title_en": "Tokyo Game Show 2016", "type": "event", "desc": "东京电玩展2016开幕", "wiki": "https://en.wikipedia.org/wiki/Tokyo_Game_Show"}, {"month": 9, "day": 22, "year": 2004, "title_cn": "《星球大战：旧共和国武士II》", "title_en": "Star Wars: KOTOR II", "type": "game", "desc": "黑曜石经典星战RPG续作发售", "wiki": "https://en.wikipedia.org/wiki/Star_Wars_Knights_of_the_Old_Republic_II:_The_Sith_Lords"}, {"month": 9, "day": 25, "year": 2018, "title_cn": "TGS 2018", "title_en": "Tokyo Game Show 2018", "type": "event", "desc": "东京电玩展2018开幕", "wiki": "https://en.wikipedia.org/wiki/Tokyo_Game_Show"}, {"month": 9, "day": 29, "year": 2011, "title_cn": "《黑暗之魂》", "title_en": "Dark Souls", "type": "game", "desc": "FromSoftware魂系列奠基之作在PS3/X360发售", "wiki": "https://en.wikipedia.org/wiki/Dark_Souls"}, {"month": 10, "day": 7, "year": 2003, "title_cn": "《星球大战：旧共和国武士》", "title_en": "Star Wars: Knights of the Old Republic", "type": "game", "desc": "BioWare经典星战RPG在PC发售", "wiki": "https://en.wikipedia.org/wiki/Star_Wars:_Knights_of_the_Old_Republic_(video_game)"}, {"month": 10, "day": 10, "year": 2023, "title_cn": "微软完成收购动视暴雪", "title_en": "Microsoft Acquires Activision Blizzard", "type": "milestone", "desc": "微软以687亿美元完成收购动视暴雪，游戏史上最大收购", "wiki": "https://en.wikipedia.org/wiki/Proposed_acquisition_of_Activision_Blizzard_by_Microsoft"}, {"month": 10, "day": 18, "year": 2011, "title_cn": "《蝙蝠侠：阿卡姆之城》", "title_en": "Batman: Arkham City", "type": "game", "desc": "Rocksteady超级英雄动作游戏续作发售", "wiki": "https://en.wikipedia.org/wiki/Batman:_Arkham_City"}, {"month": 10, "day": 20, "year": 2020, "title_cn": "Xbox Series X/S", "title_en": "Xbox Series X/S", "type": "console", "desc": "微软次世代主机全球发售", "wiki": "https://en.wikipedia.org/wiki/Xbox_Series_X_and_Series_S"}, {"month": 10, "day": 25, "year": 2019, "title_cn": "《使命召唤：现代战争》(2019)", "title_en": "Call of Duty: Modern Warfare", "type": "game", "desc": "动视重启经典FPS系列发售", "wiki": "https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_(2019_video_game)"}, {"month": 10, "day": 26, "year": 2018, "title_cn": "《荒野大镖客：救赎2》", "title_en": "Red Dead Redemption 2", "type": "game", "desc": "R星西部开放世界史诗巨作在PS4/Xbox One发售", "wiki": "https://en.wikipedia.org/wiki/Red_Dead_Redemption_2"}, {"month": 10, "day": 27, "year": 2010, "title_cn": "《辐射：新维加斯》", "title_en": "Fallout: New Vegas", "type": "game", "desc": "黑曜石开发的经典开放世界RPG发售", "wiki": "https://en.wikipedia.org/wiki/Fallout:_New_Vegas"}, {"month": 10, "day": 31, "year": 2000, "title_cn": "《鬼泣》", "title_en": "Devil May Cry", "type": "game", "desc": "卡普空开创性动作游戏在日本PS2发售", "wiki": "https://en.wikipedia.org/wiki/Devil_May_Cry_(video_game)"}, {"month": 11, "day": 1, "year": 2004, "title_cn": "《光环2》", "title_en": "Halo 2", "type": "game", "desc": "Bungie经典FPS续作在Xbox发售", "wiki": "https://en.wikipedia.org/wiki/Halo_2"}, {"month": 11, "day": 3, "year": 2003, "title_cn": "《使命召唤》", "title_en": "Call of Duty", "type": "game", "desc": "Infinity Ward经典FPS系列首作发售", "wiki": "https://en.wikipedia.org/wiki/Call_of_Duty_(video_game)"}, {"month": 11, "day": 5, "year": 2011, "title_cn": "《使命召唤：现代战争3》", "title_en": "Call of Duty: Modern Warfare 3", "type": "game", "desc": "首日销售额创娱乐产品纪录", "wiki": "https://en.wikipedia.org/wiki/Call_of_Duty:_Modern_Warfare_3"}, {"month": 11, "day": 6, "year": 2007, "title_cn": "《使命召唤4：现代战争》", "title_en": "Call of Duty 4: Modern Warfare", "type": "game", "desc": "革命性FPS经典，开启现代战争子系列", "wiki": "https://en.wikipedia.org/wiki/Call_of_Duty_4:_Modern_Warfare"}, {"month": 11, "day": 7, "year": 2006, "title_cn": "《战争机器》", "title_en": "Gears of War", "type": "game", "desc": "Epic Games第三人称射击大作在Xbox 360发售", "wiki": "https://en.wikipedia.org/wiki/Gears_of_War_(video_game)"}, {"month": 11, "day": 9, "year": 2004, "title_cn": "《魔兽世界》", "title_en": "World of Warcraft", "type": "game", "desc": "暴雪传奇MMORPG在北美发售，改变网游历史", "wiki": "https://en.wikipedia.org/wiki/World_of_Warcraft"}, {"month": 11, "day": 10, "year": 2020, "title_cn": "Xbox Series X/S", "title_en": "Xbox Series X/S", "type": "console", "desc": "微软次世代主机全球发售", "wiki": "https://en.wikipedia.org/wiki/Xbox_Series_X_and_Series_S"}, {"month": 11, "day": 11, "year": 2011, "title_cn": "《上古卷轴V：天际》", "title_en": "The Elder Scrolls V: Skyrim", "type": "game", "desc": "Bethesda开放世界RPG传奇之作发售", "wiki": "https://en.wikipedia.org/wiki/The_Elder_Scrolls_V:_Skyrim"}, {"month": 11, "day": 11, "year": 2020, "title_cn": "PlayStation 5", "title_en": "PlayStation 5", "type": "console", "desc": "索尼次世代主机PS5在北美发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_5"}, {"month": 11, "day": 12, "year": 2006, "title_cn": "PlayStation 3", "title_en": "PlayStation 3", "type": "console", "desc": "索尼第三代家用主机PS3在日本发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_3"}, {"month": 11, "day": 15, "year": 2001, "title_cn": "初代Xbox", "title_en": "Xbox", "type": "console", "desc": "微软首款家用主机Xbox在北美发售", "wiki": "https://en.wikipedia.org/wiki/Xbox_(console)"}, {"month": 11, "day": 15, "year": 2001, "title_cn": "《光环：战斗进化》", "title_en": "Halo: Combat Evolved", "type": "game", "desc": "Bungie经典FPS随Xbox首发，定义主机FPS", "wiki": "https://en.wikipedia.org/wiki/Halo:_Combat_Evolved"}, {"month": 11, "day": 17, "year": 2006, "title_cn": "任天堂Wii", "title_en": "Nintendo Wii", "type": "console", "desc": "任天堂体感革命主机Wii在北美发售", "wiki": "https://en.wikipedia.org/wiki/Wii"}, {"month": 11, "day": 18, "year": 2011, "title_cn": "《我的世界》正式版", "title_en": "Minecraft", "type": "game", "desc": "Mojang沙盒游戏正式版发布，后来成为史上最畅销游戏", "wiki": "https://en.wikipedia.org/wiki/Minecraft"}, {"month": 11, "day": 19, "year": 2006, "title_cn": "《塞尔达传说：黄昏公主》", "title_en": "The Legend of Zelda: Twilight Princess", "type": "game", "desc": "塞尔达系列Wii/NGC作品发售", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Twilight_Princess"}, {"month": 11, "day": 19, "year": 2021, "title_cn": "《宝可梦 晶灿钻石/明亮珍珠》", "title_en": "Pokémon Brilliant Diamond/Shining Pearl", "type": "game", "desc": "宝可梦第四世代重制版在Switch发售", "wiki": "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Brilliant_Diamond_and_Shining_Pearl"}, {"month": 11, "day": 20, "year": 1998, "title_cn": "《塞尔达传说：时之笛》", "title_en": "The Legend of Zelda: Ocarina of Time", "type": "game", "desc": "史上评分最高的游戏之一，在N64发售", "wiki": "https://en.wikipedia.org/wiki/The_Legend_of_Zelda:_Ocarina_of_Time"}, {"month": 11, "day": 21, "year": 2004, "title_cn": "任天堂DS", "title_en": "Nintendo DS", "type": "console", "desc": "任天堂双屏掌机在北美发售", "wiki": "https://en.wikipedia.org/wiki/Nintendo_DS"}, {"month": 11, "day": 22, "year": 2005, "title_cn": "Xbox 360", "title_en": "Xbox 360", "type": "console", "desc": "微软第二代主机Xbox 360在北美发售", "wiki": "https://en.wikipedia.org/wiki/Xbox_360"}, {"month": 11, "day": 23, "year": 2004, "title_cn": "《合金装备3：食蛇者》", "title_en": "Metal Gear Solid 3: Snake Eater", "type": "game", "desc": "小岛秀夫经典潜行动作续作在PS2发售", "wiki": "https://en.wikipedia.org/wiki/Metal_Gear_Solid_3:_Snake_Eater"}, {"month": 11, "day": 30, "year": 2012, "title_cn": "任天堂Wii U", "title_en": "Nintendo Wii U", "type": "console", "desc": "任天堂第六代家用主机Wii U在日本发售", "wiki": "https://en.wikipedia.org/wiki/Wii_U"}, {"month": 12, "day": 1, "year": 1994, "title_cn": "PlayStation", "title_en": "PlayStation", "type": "console", "desc": "索尼初代PlayStation在日本发售", "wiki": "https://en.wikipedia.org/wiki/PlayStation_(console)"}, {"month": 12, "day": 3, "year": 1996, "title_cn": "《最终幻想VII》", "title_en": "Final Fantasy VII", "type": "game", "desc": "史克威尔传奇RPG在日本PS1发售，JRPG走向世界", "wiki": "https://en.wikipedia.org/wiki/Final_Fantasy_VII"}, {"month": 12, "day": 5, "year": 2017, "title_cn": "TGA 2017", "title_en": "The Game Awards 2017", "type": "event", "desc": "年度游戏颁奖典礼举办", "wiki": "https://en.wikipedia.org/wiki/The_Game_Awards_2017"}, {"month": 12, "day": 7, "year": 2017, "title_cn": "《绝地求生》", "title_en": "PUBG", "type": "game", "desc": "大逃杀品类开创者正式版在Steam发售", "wiki": "https://en.wikipedia.org/wiki/PUBG:_Battlegrounds"}, {"month": 12, "day": 8, "year": 2022, "title_cn": "TGA 2022", "title_en": "The Game Awards 2022", "type": "event", "desc": "年度游戏颁奖典礼举办", "wiki": "https://en.wikipedia.org/wiki/The_Game_Awards_2022"}, {"month": 12, "day": 10, "year": 2020, "title_cn": "《赛博朋克2077》", "title_en": "Cyberpunk 2077", "type": "game", "desc": "CD Projekt RED开放世界赛博朋克RPG发售", "wiki": "https://en.wikipedia.org/wiki/Cyberpunk_2077"}, {"month": 12, "day": 12, "year": 2019, "title_cn": "TGA 2019", "title_en": "The Game Awards 2019", "type": "event", "desc": "年度游戏颁奖典礼举办", "wiki": "https://en.wikipedia.org/wiki/The_Game_Awards_2019"}, {"month": 12, "day": 14, "year": 2006, "title_cn": "《战争机器》PC版", "title_en": "Gears of War PC", "type": "game", "desc": "Epic经典TPS登陆PC平台", "wiki": "https://en.wikipedia.org/wiki/Gears_of_War_(video_game)"}, {"month": 12, "day": 18, "year": 2014, "title_cn": "《龙腾世纪：审判》", "title_en": "Dragon Age: Inquisition", "type": "game", "desc": "BioWare开放世界RPG，获TGA年度游戏", "wiki": "https://en.wikipedia.org/wiki/Dragon_Age:_Inquisition"}, {"month": 12, "day": 20, "year": 2019, "title_cn": "《星球大战绝地：陨落的武士团》", "title_en": "Star Wars Jedi: Fallen Order", "type": "game", "desc": "Respawn星战动作冒险游戏发售", "wiki": "https://en.wikipedia.org/wiki/Star_Wars_Jedi:_Fallen_Order"}, {"month": 12, "day": 21, "year": 1988, "title_cn": "《勇者斗恶龙III》", "title_en": "Dragon Quest III", "type": "game", "desc": "国民RPG系列经典之作在日本FC发售，引发社会现象", "wiki": "https://en.wikipedia.org/wiki/Dragon_Quest_III"}, {"month": 12, "day": 25, "year": 2003, "title_cn": "Steam平台发售首款第三方游戏", "title_en": "Steam Third-Party Games", "type": "milestone", "desc": "Valve的Steam平台开始销售第三方游戏", "wiki": "https://en.wikipedia.org/wiki/Steam_(service)"}];
+
+const MONTH_NAMES=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+const DAY_NAMES=["日","一","二","三","四","五","六"];
+const TYPE_LABELS={game:"游戏发售",console:"主机发售",event:"展会活动",milestone:"里程碑"};
+
+let currentMonth=new Date().getMonth();
+let activeFilter="all";
+
+// Index events by month-day
+const eventIndex={};
+EVENTS.forEach(e=>{
+  const key=`${e.month}-${e.day}`;
+  if(!eventIndex[key])eventIndex[key]=[];
+  eventIndex[key].push(e);
+});
+
+function getFilteredEvents(month,day){
+  const key=`${month}-${day}`;
+  const evts=eventIndex[key]||[];
+  if(activeFilter==="all")return evts;
+  return evts.filter(e=>e.type===activeFilter);
+}
+
+function getMonthFilteredCount(month){
+  let count=0;
+  for(let d=1;d<=31;d++){
+    count+=getFilteredEvents(month+1,d).length;
+  }
+  return count;
+}
+
+function render(){
+  const today=new Date();
+  const year=today.getFullYear();
+  const m=currentMonth;
+  const firstDay=new Date(year,m,1).getDay();
+  const daysInMonth=new Date(year,m+1,0).getDate();
+
+  document.getElementById("monthLabel").textContent=MONTH_NAMES[m];
+  
+  const totalFiltered=activeFilter==="all"?EVENTS.length:EVENTS.filter(e=>e.type===activeFilter).length;
+  document.getElementById("stats").textContent=`共收录 ${totalFiltered} 个事件 · 本月 ${getMonthFilteredCount(m)} 个`;
+
+  let html=DAY_NAMES.map(d=>`<div class="cal-head">${d}</div>`).join("");
+  
+  for(let i=0;i<firstDay;i++){
+    html+=`<div class="cal-cell empty"></div>`;
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getFilteredEvents(m+1,d);
+    const isToday=(d===today.getDate()&&m===today.getMonth());
+    const cls=["cal-cell"];
+    if(evts.length)cls.push("has-events");
+    if(isToday)cls.push("today");
+
+    let dots="";
+    if(evts.length){
+      const types=[...new Set(evts.map(e=>e.type))];
+      dots=`<div class="dots">${types.map(t=>`<div class="dot ${t}"></div>`).join("")}</div>`;
+    }
+
+    const countLabel=evts.length>0?`<div class="event-count">${evts.length}件</div>`:"";
+
+    html+=`<div class="${cls.join(" ")}" data-day="${d}">
+      <span class="day-num">${d}</span>${dots}${countLabel}
+    </div>`;
+  }
+
+  document.getElementById("calGrid").innerHTML=html;
+
+  document.querySelectorAll(".cal-cell.has-events").forEach(cell=>{
+    cell.addEventListener("click",()=>{
+      const day=parseInt(cell.dataset.day);
+      openModal(m+1,day);
+    });
+  });
+}
+
+function openModal(month,day){
+  const evts=getFilteredEvents(month,day);
+  if(!evts.length)return;
+  
+  evts.sort((a,b)=>a.year-b.year);
+  
+  document.getElementById("modalTitle").textContent=`${month}月${day}日 · ${evts.length}个事件`;
+  
+  let html="";
+  evts.forEach(e=>{
+    html+=`<div class="event-card" onclick="window.open('${e.wiki}','_blank')">
+      <div class="event-year">${e.year}年 <span class="event-tag ${e.type}">${TYPE_LABELS[e.type]}</span></div>
+      <div class="event-title">${e.title_cn} <span class="link-icon">🔗</span></div>
+      <div class="event-title-en">${e.title_en}</div>
+      <div class="event-desc">${e.desc}</div>
+    </div>`;
+  });
+  
+  document.getElementById("modalBody").innerHTML=html;
+  document.getElementById("modal").classList.add("open");
+}
+
+document.getElementById("modalClose").addEventListener("click",()=>{
+  document.getElementById("modal").classList.remove("open");
+});
+document.getElementById("modal").addEventListener("click",e=>{
+  if(e.target===document.getElementById("modal"))
+    document.getElementById("modal").classList.remove("open");
+});
+document.getElementById("prevMonth").addEventListener("click",()=>{
+  currentMonth=(currentMonth-1+12)%12;render();
+});
+document.getElementById("nextMonth").addEventListener("click",()=>{
+  currentMonth=(currentMonth+1)%12;render();
+});
+document.querySelectorAll(".filter-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter=btn.dataset.type;
+    render();
+  });
+});
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")document.getElementById("modal").classList.remove("open");
+  if(e.key==="ArrowLeft"){currentMonth=(currentMonth-1+12)%12;render();}
+  if(e.key==="ArrowRight"){currentMonth=(currentMonth+1)%12;render();}
+});
+
+render();
+</script>
+</body>
+</html>
