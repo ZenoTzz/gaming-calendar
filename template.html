@@ -1071,74 +1071,65 @@ document.addEventListener("keydown",e=>{
 /* ===== SEARCH LOGIC ===== */
 let searchDebounceTimer=null;
 
-// Alias map for common abbreviations/nicknames
+// Alias map: value is array of phrases (match any phrase as whole)
 const SEARCH_ALIASES={
-  // FPS
-  'cod':'call of duty 使命召唤','cs':'counter-strike 反恐精英','csgo':'counter-strike global offensive',
-  'cs2':'counter-strike 反恐精英2','bf':'battlefield 战地','mw':'modern warfare',
-  'ow':'overwatch 守望先锋','ow2':'overwatch 守望先锋2','r6':'rainbow six 彩虹六号',
-  'pubg':'pubg playerunknown battlegrounds 绝地求生','apex':'apex legends',
-  // RPG
-  'ff':'final fantasy 最终幻想','ff7':'final fantasy vii 最终幻想7','ff6':'final fantasy vi 最终幻想6',
-  'ff10':'final fantasy x 最终幻想x','ffx':'final fantasy x 最终幻想x',
-  'bg3':'baldur gate 3 博德之门','tes':'elder scrolls 上古卷轴','p5':'persona 5 女神异闻录',
-  'dq':'dragon quest 勇者斗恶龙','mgs':'metal gear solid 合金装备',
-  'ds':'dark souls 黑暗之魂','ds3':'dark souls iii 黑暗之魂3',
-  'er':'elden ring 艾尔登法环','bb':'bloodborne 血源诅咒',
-  // Action/Adventure
-  'gta':'grand theft auto 侠盗猎车','gta5':'grand theft auto v','gta6':'grand theft auto vi',
-  'gta4':'grand theft auto iv','gtasa':'grand theft auto san andreas',
-  'rdr':'red dead redemption 荒野大镖客','rdr2':'red dead redemption 2 荒野大镖客2',
-  'tlou':'last of us 最后生还者','tlou2':'last of us part ii 最后生还者2',
-  'gow':'god of war 战神','botw':'breath of the wild 旷野之息',
-  'totk':'tears of the kingdom 王国之泪','oot':'ocarina of time 时之笛',
-  'alttp':'link to the past 众神的三角力量',
-  'got':'ghost of tsushima 对马岛之魂','re':'resident evil 生化危机',
-  're2':'resident evil 2 生化危机2','re4':'resident evil 4 生化危机4',
-  'sh':'silent hill 寂静岭','dmc':'devil may cry',
-  'mh':'monster hunter 怪物猎人','cp2077':'cyberpunk 2077 赛博朋克',
-  // Nintendo
-  'botw':'breath of the wild 旷野之息','mk':'mario kart 马力欧卡丁车',
-  'smb':'super mario bros 超级马力欧','ssb':'super smash bros 任天堂明星大乱斗',
-  'mk8':'mario kart 8','ac':'animal crossing 动物森友会',
-  'acnh':'animal crossing new horizons 动物森友会',
-  // Blizzard
-  'wow':'world of warcraft 魔兽世界','d2':'diablo ii 暗黑破坏神2','d3':'diablo 3 暗黑破坏神3',
-  'd4':'diablo iv 暗黑破坏神4','sc':'starcraft 星际争霸',
-  // Valve
-  'hl':'half-life 半条命','hl2':'half-life 2 半条命2',
-  'l4d':'left 4 dead 求生之路','tf2':'team fortress',
-  // Indies/Others
-  'hk':'hollow knight 空洞骑士','sv':'stardew valley 星露谷物语',
-  'sdv':'stardew valley 星露谷物语','ut':'undertale 传说之下',
-  'de':'disco elysium 极乐迪斯科',
-  // Platforms
-  'ps':'playstation','ps1':'playstation','ps2':'playstation 2','ps3':'playstation 3',
-  'ps4':'playstation 4','ps5':'playstation 5','psp':'playstation portable',
-  'psv':'playstation vita','n64':'nintendo 64',
-  'nds':'nintendo ds','gb':'game boy','gba':'game boy advance',
-  'ns':'nintendo switch','ns2':'nintendo switch 2',
-  'fc':'family computer famicom nes 红白机',
-  'sfc':'super famicom snes 超级任天堂','dc':'dreamcast 世嘉',
-  '360':'xbox 360','xsx':'xbox series',
-  // Chinese abbreviations
-  '老滚':'elder scrolls 上古卷轴','老滚5':'elder scrolls v skyrim 上古卷轴5 天际',
-  '魂系列':'dark souls 黑暗之魂 elden ring bloodborne',
-  '魂':'dark souls 黑暗之魂','法环':'elden ring 艾尔登法环',
-  '血源':'bloodborne 血源诅咒','只狼':'sekiro 影逝二度',
-  '塞尔达':'zelda 塞尔达传说','马力欧':'mario 马力欧','马里奥':'mario 马力欧',
-  '大表哥':'red dead redemption 荒野大镖客','大镖客':'red dead redemption 荒野大镖客',
-  '巫师':'witcher','巫师3':'witcher 3','赛朋':'cyberpunk 2077 赛博朋克',
-  '大乱斗':'smash bros','宝可梦':'pokemon pokémon','精灵宝可梦':'pokemon pokémon',
-  '口袋妖怪':'pokemon pokémon','任天堂':'nintendo',
-  '索尼':'sony playstation','微软':'microsoft xbox','世嘉':'sega',
-  '卡普空':'capcom resident evil','暴雪':'blizzard warcraft diablo',
-  'v社':'valve half-life portal steam','r星':'rockstar gta red dead',
-  '顽皮狗':'naughty dog uncharted last of us','小岛':'kojima death stranding metal gear',
-  '宫崎英高':'fromsoftware dark souls elden ring',
-  '吃鸡':'pubg playerunknown 绝地求生','堡垒之夜':'fortnite',
-  '我的世界':'minecraft','mc':'minecraft 我的世界',
-  '大逃杀':'pubg fortnite battle royale',
+  'cod':['call of duty','使命召唤'],'cs':['counter-strike','反恐精英'],'csgo':['counter-strike: global offensive'],
+  'cs2':['counter-strike 2','反恐精英2'],'bf':['battlefield','战地'],'mw':['modern warfare'],
+  'ow':['overwatch','守望先锋'],'ow2':['overwatch 2','守望先锋2'],
+  'pubg':['pubg','playerunknown','绝地求生'],'apex':['apex legends'],
+  'ff':['final fantasy','最终幻想'],'ff7':['final fantasy vii','最终幻想7'],
+  'ff6':['final fantasy vi','最终幻想6'],'ff10':['final fantasy x','最终幻想x'],
+  'ffx':['final fantasy x','最终幻想x'],
+  'bg3':['baldur\'s gate 3','博德之门3'],'tes':['elder scrolls','上古卷轴'],
+  'p5':['persona 5','女神异闻录5'],'dq':['dragon quest','勇者斗恶龙'],
+  'mgs':['metal gear solid','合金装备'],
+  'ds':['dark souls','黑暗之魂'],'ds3':['dark souls iii','黑暗之魂3'],
+  'er':['elden ring','艾尔登法环'],'bb':['bloodborne','血源诅咒'],
+  'gta':['grand theft auto','侠盗猎车','gta'],'gta5':['grand theft auto v','gta5'],
+  'gta6':['grand theft auto vi','gta6'],'gta4':['grand theft auto iv'],
+  'gtasa':['grand theft auto: san andreas','圣安地列斯'],
+  'rdr':['red dead redemption','荒野大镖客'],'rdr2':['red dead redemption 2','荒野大镖客2'],
+  'tlou':['last of us','最后生还者'],'tlou2':['last of us part ii'],
+  'gow':['god of war','战神'],'botw':['breath of the wild','旷野之息'],
+  'totk':['tears of the kingdom','王国之泪'],'oot':['ocarina of time','时之笛'],
+  'alttp':['link to the past','众神的三角力量'],
+  'got':['ghost of tsushima','对马岛之魂'],'re':['resident evil','生化危机'],
+  're2':['resident evil 2'],'re4':['resident evil 4'],
+  'sh':['silent hill','寂静岭'],'dmc':['devil may cry'],
+  'mh':['monster hunter','怪物猎人'],'cp2077':['cyberpunk 2077','赛博朋克'],
+  'smb':['super mario bros','超级马力欧'],'ssb':['super smash bros'],
+  'mk':['mario kart','马力欧卡丁车'],'mk8':['mario kart 8'],
+  'ac':['animal crossing','动物森友会'],'acnh':['animal crossing: new horizons'],
+  'wow':['world of warcraft','魔兽世界'],'d2':['diablo ii','暗黑破坏神2'],
+  'd3':['diablo 3','暗黑破坏神3'],'d4':['diablo iv','暗黑破坏神4'],
+  'sc':['starcraft','星际争霸'],
+  'hl':['half-life','半条命'],'hl2':['half-life 2','半条命2'],
+  'hk':['hollow knight','空洞骑士'],'sv':['stardew valley','星露谷物语'],
+  'sdv':['stardew valley'],'ut':['undertale','传说之下'],
+  'de':['disco elysium','极乐迪斯科'],
+  'ps':['playstation'],'ps1':['playstation'],'ps2':['playstation 2'],'ps3':['playstation 3'],
+  'ps5':['playstation 5'],'psp':['playstation portable'],
+  'n64':['nintendo 64'],'gb':['game boy'],'ns':['nintendo switch'],'ns2':['nintendo switch 2'],
+  'fc':['family computer','famicom','红白机'],'dc':['dreamcast'],
+  '360':['xbox 360'],'xsx':['xbox series'],
+  '老滚':['elder scrolls','上古卷轴'],'老滚5':['skyrim','上古卷轴5','天际'],
+  '魂系列':['dark souls','elden ring','bloodborne'],'魂':['dark souls','黑暗之魂'],
+  '法环':['elden ring','艾尔登法环'],'血源':['bloodborne','血源诅咒'],
+  '只狼':['sekiro','影逝二度'],'塞尔达':['zelda','塞尔达传说'],
+  '马力欧':['mario'],'马里奥':['mario'],
+  '大表哥':['red dead redemption','荒野大镖客'],
+  '大镖客':['red dead redemption'],
+  '巫师':['witcher'],'巫师3':['witcher 3'],'赛朋':['cyberpunk 2077','赛博朋克'],
+  '大乱斗':['smash bros'],'宝可梦':['pokemon','pok\u00e9mon'],
+  '精灵宝可梦':['pokemon'],'口袋妖怪':['pokemon'],
+  '任天堂':['nintendo'],'索尼':['sony','playstation'],'微软':['microsoft','xbox'],'世嘉':['sega'],
+  '卡普空':['capcom'],'暴雪':['blizzard'],
+  'v社':['valve'],'r星':['rockstar'],
+  '顽皮狗':['naughty dog'],'小岛':['kojima'],
+  '宫崎英高':['fromsoftware','dark souls','elden ring'],
+  '吃鸡':['pubg','绝地求生'],'堡垒之夜':['fortnite'],
+  '我的世界':['minecraft'],'mc':['minecraft','我的世界'],
+  '大逃杀':['pubg','fortnite','battle royale'],
 };
 
 function expandAliases(tokens){
@@ -1189,12 +1180,12 @@ function performSearch(query){
       TYPE_LABELS[e.type]||'',
       e.type||''
     ].join(' ').toLowerCase();
-    // Each original token must match: either directly or via any of its aliases
+    // Each original token must match: either directly or via any of its alias phrases
     return tokens.every(t=>{
       if(haystack.includes(t))return true;
-      const aliasStr=SEARCH_ALIASES[t];
-      if(aliasStr){
-        return aliasStr.split(/\s+/).some(a=>a&&haystack.includes(a));
+      const aliasPhrases=SEARCH_ALIASES[t];
+      if(aliasPhrases){
+        return aliasPhrases.some(phrase=>haystack.includes(phrase.toLowerCase()));
       }
       return false;
     });
