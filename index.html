@@ -28,9 +28,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
 .month-nav button:hover{background:var(--accent2);border-color:var(--accent)}
 .month-nav .month-label{font-size:1.3em;font-weight:700;min-width:120px;text-align:center}
-.main-layout{display:flex;max-width:1400px;margin:0 auto;padding:10px 16px 40px;gap:16px}
+.main-layout{display:flex;max-width:1600px;margin:0 auto;padding:10px 16px 40px;gap:16px}
 .calendar-container{flex:1;min-width:0}
-.sidebar{width:280px;flex-shrink:0}
+.sidebar{width:260px;flex-shrink:0}
 .sidebar-left{order:-1}
 .sidebar-right{order:1}
 .sidebar-title{font-size:1em;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
@@ -47,44 +47,134 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .sb-section{font-size:.85em;font-weight:700;color:var(--text);padding:10px 0 6px;margin-top:8px;border-bottom:1px solid var(--border)}
 .sb-section:first-child{margin-top:0}
 .sb-empty{color:var(--text2);font-size:.85em;padding:20px 0;text-align:center}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal-head{text-align:center;font-size:.8em;color:var(--text2);padding:8px 0;font-weight:600}
-.cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;position:relative;transition:.15s;border:1px solid transparent;min-height:60px}
-.cal-cell.has-events{cursor:pointer;background:var(--card);border-color:var(--border)}
-.cal-cell.has-events:hover{background:var(--hover);border-color:var(--accent);transform:scale(1.05);z-index:2}
-.cal-cell.today{border:2px solid var(--accent) !important;box-shadow:0 0 12px rgba(88,166,255,.3)}
-.cal-cell .day-num{font-size:1em;font-weight:500}
-.cal-cell.empty .day-num{color:var(--border)}
-.cal-cell .dots{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap;justify-content:center}
-.dot{width:7px;height:7px;border-radius:50%}
-.dot.game{background:var(--game)}.dot.console{background:var(--console)}.dot.event{background:var(--event)}.dot.milestone{background:var(--milestone)}.dot.upcoming{background:var(--upcoming)}
-.cal-cell .event-count{font-size:.7em;color:var(--text2);margin-top:2px}
-.cal-cell.has-major{box-shadow:inset 0 0 0 1px rgba(255,215,0,.3)}
-.cal-cell .ann-badge{position:absolute;top:2px;right:3px;font-size:.55em;color:#ffd700}
 
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:center;padding:20px}
+/* ===== DESKTOP CALENDAR GRID ===== */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-head{text-align:center;font-size:.8em;color:var(--text2);padding:8px 0;font-weight:600}
+
+.cal-cell{
+  border-radius:8px;
+  display:flex;flex-direction:column;
+  cursor:default;
+  position:relative;
+  transition:.15s;
+  border:1px solid transparent;
+  min-height:100px;
+  padding:6px 7px 5px;
+  overflow:hidden;
+}
+.cal-cell.has-events{cursor:pointer;background:var(--card);border-color:var(--border)}
+.cal-cell.has-events:hover{background:var(--hover);border-color:var(--accent);z-index:2;box-shadow:0 4px 16px rgba(88,166,255,.18)}
+.cal-cell.today{border:2px solid var(--accent) !important;box-shadow:0 0 12px rgba(88,166,255,.3)}
+.cal-cell.has-major{box-shadow:inset 0 0 0 1px rgba(255,215,0,.3)}
+.cal-cell.empty{min-height:100px;background:transparent}
+
+.day-num{font-size:.95em;font-weight:600;line-height:1;margin-bottom:5px;flex-shrink:0}
+.cal-cell.empty .day-num{color:var(--border)}
+.cal-cell.today .day-num{color:var(--accent)}
+
+.ann-badge{position:absolute;top:4px;right:5px;font-size:.65em;color:#ffd700;line-height:1}
+
+.cell-events{display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden}
+
+.cell-event-item{
+  font-size:.7em;
+  line-height:1.25;
+  padding:1px 4px;
+  border-radius:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+.cell-event-item.imp-high{font-weight:700;color:#ffd700}
+.cell-event-item.imp-mid{color:var(--text)}
+.cell-event-item.imp-low{color:var(--text2)}
+.cell-event-item.type-game{background:rgba(63,185,80,.12)}
+.cell-event-item.type-console{background:rgba(247,129,102,.12)}
+.cell-event-item.type-event{background:rgba(210,168,255,.12)}
+.cell-event-item.type-milestone{background:rgba(240,192,0,.12)}
+.cell-event-item.type-upcoming{background:rgba(255,107,107,.12)}
+
+.cell-more{font-size:.65em;color:var(--text2);padding:1px 4px;font-style:italic}
+
+/* ===== MOBILE TIMELINE VIEW ===== */
+.mobile-timeline{display:none;padding:0 0 40px}
+.tl-day{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+.tl-day:hover{background:var(--hover)}
+.tl-date-col{flex-shrink:0;width:52px;text-align:center;padding-top:2px}
+.tl-date-num{font-size:1.3em;font-weight:700;line-height:1;color:var(--text)}
+.tl-date-wd{font-size:.7em;color:var(--text2);margin-top:1px}
+.tl-date-col.today-col .tl-date-num{color:var(--accent)}
+.tl-date-col.today-col .tl-date-wd{color:var(--accent)}
+.tl-events-col{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tl-event-item{
+  font-size:.82em;
+  padding:3px 8px;
+  border-radius:5px;
+  line-height:1.3;
+  display:flex;align-items:center;gap:4px;
+}
+.tl-event-item.imp-high{font-weight:700;color:#ffd700}
+.tl-event-item.imp-mid{color:var(--text)}
+.tl-event-item.imp-low{color:var(--text2)}
+.tl-event-item.type-game{background:rgba(63,185,80,.12)}
+.tl-event-item.type-console{background:rgba(247,129,102,.12)}
+.tl-event-item.type-event{background:rgba(210,168,255,.12)}
+.tl-event-item.type-milestone{background:rgba(240,192,0,.12)}
+.tl-event-item.type-upcoming{background:rgba(255,107,107,.12)}
+.tl-ann-tag{font-size:.7em;font-weight:700;color:#ffd700;flex-shrink:0}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;justify-content:center;align-items:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;padding:0}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:620px;width:100%;max-height:85vh;overflow-y:auto;padding:0}
 .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);border-radius:16px 16px 0 0;z-index:1}
 .modal-header h2{font-size:1.2em}
 .modal-close{background:none;border:none;color:var(--text2);font-size:1.5em;cursor:pointer;padding:4px 8px;border-radius:6px}
 .modal-close:hover{background:var(--hover);color:var(--text)}
 .modal-body{padding:16px 24px 24px}
-.event-card{padding:14px;border-radius:10px;background:var(--card2);margin-bottom:10px;cursor:pointer;transition:.2s;border:1px solid transparent}
-.event-card:hover{border-color:var(--accent);transform:translateX(4px)}
+
+/* Event card with image */
+.event-card{
+  padding:14px;border-radius:10px;background:var(--card2);
+  margin-bottom:10px;cursor:pointer;transition:.2s;
+  border:1px solid transparent;
+}
+.event-card:hover{border-color:var(--accent)}
 .event-card:last-child{margin-bottom:0}
-.event-card .event-year{font-size:.8em;color:var(--text2);margin-bottom:4px}
-.event-card .event-title{font-size:1.05em;font-weight:600;margin-bottom:2px}
-.event-card .event-title-en{font-size:.85em;color:var(--text2);margin-bottom:6px}
-.event-card .event-desc{font-size:.88em;color:var(--text2);line-height:1.5}
-.anniversary{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75em;font-weight:700;margin-left:6px}
-.anniversary.big{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
-.anniversary.normal{background:rgba(255,255,255,.08);color:var(--text2)}
-.importance{margin-right:4px;font-size:.9em}
 .event-card.imp3{border-left:3px solid #ffd700}
 .event-card.imp2{border-left:3px solid var(--accent)}
 .event-card.imp1{border-left:3px solid var(--border)}
+
+.event-card-inner{display:flex;gap:12px;align-items:flex-start}
+.event-img-wrap{
+  flex-shrink:0;width:80px;height:80px;
+  border-radius:8px;overflow:hidden;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  font-size:2em;
+  position:relative;
+}
+.event-img-wrap img{
+  width:100%;height:100%;object-fit:cover;
+  display:none;
+  border-radius:7px;
+}
+.event-img-wrap img.loaded{display:block}
+.event-img-placeholder{font-size:2em;line-height:1}
+.event-info{flex:1;min-width:0}
+.event-year{font-size:.8em;color:var(--text2);margin-bottom:4px}
+.event-title{font-size:1.05em;font-weight:600;margin-bottom:2px}
+.event-title-en{font-size:.85em;color:var(--text2);margin-bottom:6px}
+.event-desc{font-size:.88em;color:var(--text2);line-height:1.5}
+.event-ann-row{margin-top:5px}
+
+.anniversary{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75em;font-weight:700;margin-right:4px}
+.anniversary.big{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+.anniversary.normal{background:rgba(255,255,255,.08);color:var(--text2)}
+.importance{margin-right:4px;font-size:.9em}
 .event-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:600;margin-left:6px;vertical-align:middle}
 .event-tag.game{background:rgba(63,185,80,.15);color:var(--game)}
 .event-tag.console{background:rgba(247,129,102,.15);color:var(--console)}
@@ -96,19 +186,37 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 /* Stats bar */
 .stats{text-align:center;padding:8px;color:var(--text2);font-size:.82em}
 
-@media(max-width:1100px){
+/* ===== RESPONSIVE ===== */
+@media(max-width:1200px){
+  .sidebar{width:220px}
+  .cal-cell{min-height:80px}
+}
+@media(max-width:900px){
   .main-layout{flex-direction:column}
   .sidebar{width:100%}
   .sidebar-left{order:0}
   .sidebar-right{order:0}
   .sidebar-list{max-height:200px}
+  .cal-cell{min-height:72px}
 }
-@media(max-width:600px){
-  .cal-cell{min-height:44px;border-radius:6px}
-  .cal-cell .day-num{font-size:.85em}
-  .dot{width:5px;height:5px}
-  .header h1{font-size:1.3em}
+@media(max-width:767px){
+  /* Hide desktop calendar on mobile */
+  .calendar-container{display:none}
+  .month-nav{display:flex}
+
+  /* Show timeline */
+  .mobile-timeline{display:block}
+
   .modal{max-width:100%;border-radius:12px}
+  .event-img-wrap{width:64px;height:64px}
+  .event-card-inner{gap:8px}
+}
+@media(min-width:768px){
+  .mobile-timeline{display:none !important}
+}
+@media(max-width:480px){
+  .header h1{font-size:1.3em}
+  .tl-day{padding:8px 12px}
 }
 </style>
 </head>
@@ -131,6 +239,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <span class="month-label" id="monthLabel"></span>
   <button id="nextMonth">下月 ▶</button>
 </div>
+
+<!-- Desktop: 3-column layout with calendar -->
 <div class="main-layout">
   <div class="sidebar sidebar-left" id="sidebarAnn">
     <h3 class="sidebar-title" id="sidebarAnnTitle">🎉 整周年纪念</h3>
@@ -145,6 +255,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   </div>
 </div>
 
+<!-- Mobile: timeline list view -->
+<div class="mobile-timeline" id="mobileTimeline"></div>
+
+<!-- Modal -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-header">
@@ -161,9 +275,73 @@ const EVENTS=[{"month": 1, "day": 1, "year": 1985, "title_cn": "任天堂红白�
 const MONTH_NAMES=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
 const DAY_NAMES=["日","一","二","三","四","五","六"];
 const TYPE_LABELS={game:"游戏发售",console:"主机发售",event:"展会活动",milestone:"里程碑",upcoming:"即将发售"};
+const TYPE_EMOJI={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
+const TYPE_FALLBACK={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
 
 let currentMonth=new Date().getMonth();
 let activeFilter="all";
+
+// Wikipedia image cache
+const wikiCache={};
+
+function getWikiTitle(wikiUrl){
+  if(!wikiUrl)return null;
+  try{
+    const url=new URL(wikiUrl);
+    const parts=url.pathname.split('/wiki/');
+    if(parts.length>1)return decodeURIComponent(parts[1]);
+  }catch(e){}
+  return null;
+}
+
+async function fetchWikiImage(wikiUrl,imgEl,placeholderEl,type){
+  const title=getWikiTitle(wikiUrl);
+  if(!title){
+    if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+    return;
+  }
+  const cacheKey='wiki_img_'+title;
+
+  // Check sessionStorage first
+  try{
+    const cached=sessionStorage.getItem(cacheKey);
+    if(cached){
+      if(cached==='null'){
+        if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+        return;
+      }
+      if(imgEl){imgEl.src=cached;imgEl.classList.add('loaded');if(placeholderEl)placeholderEl.style.display='none';}
+      return;
+    }
+  }catch(e){}
+
+  // In-memory cache
+  if(wikiCache[cacheKey]!==undefined){
+    const src=wikiCache[cacheKey];
+    if(!src){if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';return;}
+    if(imgEl){imgEl.src=src;imgEl.classList.add('loaded');if(placeholderEl)placeholderEl.style.display='none';}
+    return;
+  }
+
+  try{
+    const resp=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    const src=data.thumbnail&&data.thumbnail.source?data.thumbnail.source:null;
+    wikiCache[cacheKey]=src;
+    try{sessionStorage.setItem(cacheKey,src||'null');}catch(e){}
+    if(src&&imgEl){
+      imgEl.src=src;imgEl.classList.add('loaded');
+      if(placeholderEl)placeholderEl.style.display='none';
+    }else{
+      if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+    }
+  }catch(e){
+    wikiCache[cacheKey]=null;
+    try{sessionStorage.setItem(cacheKey,'null');}catch(ex){}
+    if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+  }
+}
 
 // Index events by month-day
 const eventIndex={};
@@ -182,10 +360,21 @@ function getFilteredEvents(month,day){
 
 function getMonthFilteredCount(month){
   let count=0;
-  for(let d=1;d<=31;d++){
-    count+=getFilteredEvents(month+1,d).length;
-  }
+  for(let d=1;d<=31;d++){count+=getFilteredEvents(month+1,d).length;}
   return count;
+}
+
+function getCellEventLabel(e){
+  const yr=new Date().getFullYear();
+  const years=yr-e.year;
+  const isBigAnn=years>0&&(years%10===0||years%25===0);
+  const isAnn=years>0&&years%5===0;
+  const emoji=TYPE_EMOJI[e.type]||'🎮';
+  let prefix=emoji+' ';
+  if(isBigAnn||isAnn){
+    prefix=`🎉${years}周年 `;
+  }
+  return prefix+'《'+e.title_cn.replace(/^《|》$/g,'')+'》';
 }
 
 function render(){
@@ -196,14 +385,16 @@ function render(){
   const daysInMonth=new Date(year,m+1,0).getDate();
 
   document.getElementById("monthLabel").textContent=MONTH_NAMES[m];
-  
+
   const totalFiltered=activeFilter==="all"?EVENTS.length:EVENTS.filter(e=>e.type===activeFilter).length;
   document.getElementById("stats").textContent=`共收录 ${totalFiltered} 个事件 · 本月 ${getMonthFilteredCount(m)} 个`;
 
+  /* ===== Desktop Calendar Grid ===== */
+  const yr=year;
   let html=DAY_NAMES.map(d=>`<div class="cal-head">${d}</div>`).join("");
-  
+
   for(let i=0;i<firstDay;i++){
-    html+=`<div class="cal-cell empty"></div>`;
+    html+=`<div class="cal-cell empty"><span class="day-num"></span></div>`;
   }
 
   for(let d=1;d<=daysInMonth;d++){
@@ -212,23 +403,30 @@ function render(){
     const cls=["cal-cell"];
     if(evts.length)cls.push("has-events");
     if(isToday)cls.push("today");
-
-    let dots="";
-    if(evts.length){
-      const types=[...new Set(evts.map(e=>e.type))];
-      dots=`<div class="dots">${types.map(t=>`<div class="dot ${t}"></div>`).join("")}</div>`;
-    }
-
-    const countLabel=evts.length>0?`<div class="event-count">${evts.length}件</div>`:"";
-    // Check for anniversary milestones or high-importance events
-    const yr=new Date().getFullYear();
     const hasMajor=evts.some(e=>(e.importance||1)>=3);
     const hasAnn=evts.some(e=>{const a=yr-e.year;return a>0&&(a%10===0||a%25===0);});
     if(hasMajor)cls.push('has-major');
     const annBadge=hasAnn?'<span class="ann-badge">🎂</span>':'';
 
+    let eventsHTML='';
+    if(evts.length){
+      const MAX_SHOW=3;
+      const shown=evts.slice(0,MAX_SHOW);
+      shown.forEach(e=>{
+        const imp=e.importance||1;
+        const impCls=imp>=3?'imp-high':imp>=2?'imp-mid':'imp-low';
+        const label=getCellEventLabel(e);
+        eventsHTML+=`<div class="cell-event-item type-${e.type} ${impCls}" title="${e.title_cn} (${e.year})">${label}</div>`;
+      });
+      if(evts.length>MAX_SHOW){
+        eventsHTML+=`<div class="cell-more">+${evts.length-MAX_SHOW} 更多</div>`;
+      }
+    }
+
     html+=`<div class="${cls.join(" ")}" data-day="${d}">
-      ${annBadge}<span class="day-num">${d}</span>${dots}${countLabel}
+      ${annBadge}
+      <span class="day-num">${d}</span>
+      <div class="cell-events">${eventsHTML}</div>
     </div>`;
   }
 
@@ -241,15 +439,49 @@ function render(){
     });
   });
 
-  // === Left sidebar: Year-round anniversaries ===
-  const yr=new Date().getFullYear();
+  /* ===== Mobile Timeline ===== */
+  let tlHTML='';
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getFilteredEvents(m+1,d);
+    if(!evts.length)continue;
+    const isToday=(d===today.getDate()&&m===today.getMonth());
+    const dt=new Date(year,m,d);
+    const wd=DAY_NAMES[dt.getDay()];
+    const todayCls=isToday?'today-col':'';
+    let evtItems='';
+    evts.forEach(e=>{
+      const imp=e.importance||1;
+      const impCls=imp>=3?'imp-high':imp>=2?'imp-mid':'imp-low';
+      const years=yr-e.year;
+      const isBigAnn=years>0&&(years%10===0||years%25===0);
+      const isAnn=years>0&&years%5===0;
+      let annTag='';
+      if(isBigAnn)annTag=`<span class="tl-ann-tag">🎉${years}周年</span>`;
+      else if(isAnn)annTag=`<span class="tl-ann-tag">${years}周年</span>`;
+      const emoji=TYPE_EMOJI[e.type]||'🎮';
+      evtItems+=`<div class="tl-event-item type-${e.type} ${impCls}">${emoji} ${e.title_cn}${annTag?'&nbsp;'+annTag:''}</div>`;
+    });
+    tlHTML+=`<div class="tl-day" data-month="${m+1}" data-day="${d}">
+      <div class="tl-date-col ${todayCls}">
+        <div class="tl-date-num">${d}</div>
+        <div class="tl-date-wd">${wd}</div>
+      </div>
+      <div class="tl-events-col">${evtItems}</div>
+    </div>`;
+  }
+  document.getElementById('mobileTimeline').innerHTML=tlHTML||'<div style="text-align:center;padding:40px;color:var(--text2)">本月暂无事件</div>';
+  document.querySelectorAll('.tl-day').forEach(row=>{
+    row.addEventListener('click',()=>{
+      openModal(parseInt(row.dataset.month),parseInt(row.dataset.day));
+    });
+  });
+
+  /* ===== Left Sidebar: Whole-year anniversaries ===== */
   let allYearAnns=[];
   EVENTS.forEach(e=>{
     const years=yr-e.year;
     const isBigAnn=years>0&&(years%10===0||years%25===0);
-    if(isBigAnn){
-      allYearAnns.push({...e,years,isThisMonth:e.month===m+1});
-    }
+    if(isBigAnn){allYearAnns.push({...e,years,isThisMonth:e.month===m+1});}
   });
   allYearAnns.sort((a,b)=>a.month!==b.month?a.month-b.month:a.day-b.day);
   let annHTML='';
@@ -270,7 +502,7 @@ function render(){
   document.getElementById('sidebarAnnTitle').textContent=`🎉 ${yr}年整周年纪念 (${allYearAnns.length})`;
   document.getElementById('sidebarAnnList').innerHTML=annHTML;
 
-  // === Right sidebar: This month's highlights ===
+  /* ===== Right Sidebar: This month's highlights ===== */
   let highlights=[];
   for(let d=1;d<=daysInMonth;d++){
     const evts=getFilteredEvents(m+1,d);
@@ -278,9 +510,7 @@ function render(){
       const years=yr-e.year;
       const isFuture=years<0;
       const imp=e.importance||1;
-      if(imp>=2||isFuture){
-        highlights.push({...e,day:d,years,isFuture});
-      }
+      if(imp>=2||isFuture){highlights.push({...e,day:d,years,isFuture});}
     });
   }
   highlights.sort((a,b)=>{
@@ -311,18 +541,18 @@ function render(){
 function openModal(month,day){
   const evts=getFilteredEvents(month,day);
   if(!evts.length)return;
-  
   evts.sort((a,b)=>a.year-b.year);
-  
   document.getElementById("modalTitle").textContent=`${month}月${day}日 · ${evts.length}个事件`;
-  
-  let html="";
+
   const thisYear=new Date().getFullYear();
-  evts.forEach(e=>{
+  let html="";
+  const cardData=[];
+
+  evts.forEach((e,idx)=>{
     const years=thisYear-e.year;
     const isFuture=years<0;
     let annHTML='';
-    if(!isFuture && years>0){
+    if(!isFuture&&years>0){
       const isBig=(years%10===0)||(years%25===0);
       const cls=isBig?'big':'normal';
       const suffix=isBig?' 🎉':'';
@@ -331,18 +561,38 @@ function openModal(month,day){
     const imp=e.importance||1;
     const impStars='⭐'.repeat(imp);
     const impCls=`imp${imp}`;
-    html+=`<div class="event-card ${impCls}" onclick="window.open('${e.wiki}','_blank')">
-      <div class="event-year"><span class="importance">${impStars}</span>${e.year}年 <span class="event-tag ${e.type}">${TYPE_LABELS[e.type]}</span>${annHTML}</div>
-      <div class="event-title">${e.title_cn} <span class="link-icon">🔗</span></div>
-      <div class="event-title-en">${e.title_en}</div>
-      <div class="event-desc">${e.desc}</div>
+    const cardId=`ecard-${month}-${day}-${idx}`;
+
+    html+=`<div class="event-card ${impCls}" id="${cardId}" onclick="window.open('${e.wiki}','_blank')">
+      <div class="event-card-inner">
+        <div class="event-img-wrap" id="imgwrap-${cardId}">
+          <span class="event-img-placeholder" id="ph-${cardId}">${TYPE_EMOJI[e.type]||'🎮'}</span>
+          <img id="img-${cardId}" alt="${e.title_en}" onerror="this.style.display='none';document.getElementById('ph-${cardId}').style.display='';" />
+        </div>
+        <div class="event-info">
+          <div class="event-year"><span class="importance">${impStars}</span>${e.year}年 <span class="event-tag ${e.type}">${TYPE_LABELS[e.type]}</span></div>
+          <div class="event-title">${e.title_cn} <span class="link-icon">🔗</span></div>
+          <div class="event-title-en">${e.title_en}</div>
+          <div class="event-desc">${e.desc}</div>
+          ${annHTML?`<div class="event-ann-row">${annHTML}</div>`:''}
+        </div>
+      </div>
     </div>`;
+    cardData.push({id:cardId,wiki:e.wiki,type:e.type});
   });
-  
+
   document.getElementById("modalBody").innerHTML=html;
   document.getElementById("modal").classList.add("open");
+
+  // Async load wiki images after modal renders
+  cardData.forEach(({id,wiki,type})=>{
+    const imgEl=document.getElementById('img-'+id);
+    const phEl=document.getElementById('ph-'+id);
+    fetchWikiImage(wiki,imgEl,phEl,type);
+  });
 }
 
+/* ===== Event Listeners ===== */
 document.getElementById("modalClose").addEventListener("click",()=>{
   document.getElementById("modal").classList.remove("open");
 });
@@ -364,7 +614,6 @@ document.querySelectorAll(".filter-btn").forEach(btn=>{
     render();
   });
 });
-
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape")document.getElementById("modal").classList.remove("open");
   if(e.key==="ArrowLeft"){currentMonth=(currentMonth-1+12)%12;render();}

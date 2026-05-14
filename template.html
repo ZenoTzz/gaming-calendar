@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 游戏大事件日历 | Gaming History Calendar</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0e1117;--card:#161b22;--card2:#1c2333;--border:#30363d;
+  --text:#e6edf3;--text2:#8b949e;--accent:#58a6ff;--accent2:#1f6feb;
+  --game:#3fb950;--console:#f78166;--event:#d2a8ff;--milestone:#f0c000;--upcoming:#ff6b6b;
+  --hover:#21262d;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;min-height:100vh}
+.header{text-align:center;padding:30px 20px 20px;border-bottom:1px solid var(--border)}
+.header h1{font-size:1.8em;background:linear-gradient(90deg,var(--accent),var(--event),var(--game));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.header p{color:var(--text2);font-size:.9em}
+.filters{display:flex;justify-content:center;gap:10px;padding:16px 20px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:.85em;transition:.2s}
+.filter-btn:hover,.filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.1)}
+.filter-btn[data-type="game"].active{border-color:var(--game);color:var(--game);background:rgba(63,185,80,.1)}
+.filter-btn[data-type="console"].active{border-color:var(--console);color:var(--console);background:rgba(247,129,102,.1)}
+.filter-btn[data-type="event"].active{border-color:var(--event);color:var(--event);background:rgba(210,168,255,.1)}
+.filter-btn[data-type="milestone"].active{border-color:var(--milestone);color:var(--milestone);background:rgba(240,192,0,.1)}
+.filter-btn[data-type="upcoming"].active{border-color:var(--upcoming);color:var(--upcoming);background:rgba(255,107,107,.1)}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px}
+.month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
+.month-nav button:hover{background:var(--accent2);border-color:var(--accent)}
+.month-nav .month-label{font-size:1.3em;font-weight:700;min-width:120px;text-align:center}
+.main-layout{display:flex;max-width:1600px;margin:0 auto;padding:10px 16px 40px;gap:16px}
+.calendar-container{flex:1;min-width:0}
+.sidebar{width:260px;flex-shrink:0}
+.sidebar-left{order:-1}
+.sidebar-right{order:1}
+.sidebar-title{font-size:1em;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.sidebar-list{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 260px);overflow-y:auto}
+.sb-card{padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:.2s}
+.sb-card:hover{border-color:var(--accent);background:var(--hover)}
+.sb-card.sb-imp3{border-left:3px solid #ffd700}
+.sb-card.sb-imp2{border-left:3px solid var(--accent)}
+.sb-card .sb-date{font-size:.72em;color:var(--text2)}
+.sb-card .sb-name{font-size:.9em;font-weight:600;margin:2px 0}
+.sb-card .sb-ann{font-size:.72em;font-weight:700;color:#ffd700}
+.sb-card .sb-desc{font-size:.78em;color:var(--text2);margin-top:3px;line-height:1.4}
+.sb-card.sb-current{background:var(--card2);border-color:var(--accent)}
+.sb-section{font-size:.85em;font-weight:700;color:var(--text);padding:10px 0 6px;margin-top:8px;border-bottom:1px solid var(--border)}
+.sb-section:first-child{margin-top:0}
+.sb-empty{color:var(--text2);font-size:.85em;padding:20px 0;text-align:center}
+
+/* ===== DESKTOP CALENDAR GRID ===== */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-head{text-align:center;font-size:.8em;color:var(--text2);padding:8px 0;font-weight:600}
+
+.cal-cell{
+  border-radius:8px;
+  display:flex;flex-direction:column;
+  cursor:default;
+  position:relative;
+  transition:.15s;
+  border:1px solid transparent;
+  min-height:100px;
+  padding:6px 7px 5px;
+  overflow:hidden;
+}
+.cal-cell.has-events{cursor:pointer;background:var(--card);border-color:var(--border)}
+.cal-cell.has-events:hover{background:var(--hover);border-color:var(--accent);z-index:2;box-shadow:0 4px 16px rgba(88,166,255,.18)}
+.cal-cell.today{border:2px solid var(--accent) !important;box-shadow:0 0 12px rgba(88,166,255,.3)}
+.cal-cell.has-major{box-shadow:inset 0 0 0 1px rgba(255,215,0,.3)}
+.cal-cell.empty{min-height:100px;background:transparent}
+
+.day-num{font-size:.95em;font-weight:600;line-height:1;margin-bottom:5px;flex-shrink:0}
+.cal-cell.empty .day-num{color:var(--border)}
+.cal-cell.today .day-num{color:var(--accent)}
+
+.ann-badge{position:absolute;top:4px;right:5px;font-size:.65em;color:#ffd700;line-height:1}
+
+.cell-events{display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden}
+
+.cell-event-item{
+  font-size:.7em;
+  line-height:1.25;
+  padding:1px 4px;
+  border-radius:3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+}
+.cell-event-item.imp-high{font-weight:700;color:#ffd700}
+.cell-event-item.imp-mid{color:var(--text)}
+.cell-event-item.imp-low{color:var(--text2)}
+.cell-event-item.type-game{background:rgba(63,185,80,.12)}
+.cell-event-item.type-console{background:rgba(247,129,102,.12)}
+.cell-event-item.type-event{background:rgba(210,168,255,.12)}
+.cell-event-item.type-milestone{background:rgba(240,192,0,.12)}
+.cell-event-item.type-upcoming{background:rgba(255,107,107,.12)}
+
+.cell-more{font-size:.65em;color:var(--text2);padding:1px 4px;font-style:italic}
+
+/* ===== MOBILE TIMELINE VIEW ===== */
+.mobile-timeline{display:none;padding:0 0 40px}
+.tl-day{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+.tl-day:hover{background:var(--hover)}
+.tl-date-col{flex-shrink:0;width:52px;text-align:center;padding-top:2px}
+.tl-date-num{font-size:1.3em;font-weight:700;line-height:1;color:var(--text)}
+.tl-date-wd{font-size:.7em;color:var(--text2);margin-top:1px}
+.tl-date-col.today-col .tl-date-num{color:var(--accent)}
+.tl-date-col.today-col .tl-date-wd{color:var(--accent)}
+.tl-events-col{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tl-event-item{
+  font-size:.82em;
+  padding:3px 8px;
+  border-radius:5px;
+  line-height:1.3;
+  display:flex;align-items:center;gap:4px;
+}
+.tl-event-item.imp-high{font-weight:700;color:#ffd700}
+.tl-event-item.imp-mid{color:var(--text)}
+.tl-event-item.imp-low{color:var(--text2)}
+.tl-event-item.type-game{background:rgba(63,185,80,.12)}
+.tl-event-item.type-console{background:rgba(247,129,102,.12)}
+.tl-event-item.type-event{background:rgba(210,168,255,.12)}
+.tl-event-item.type-milestone{background:rgba(240,192,0,.12)}
+.tl-event-item.type-upcoming{background:rgba(255,107,107,.12)}
+.tl-ann-tag{font-size:.7em;font-weight:700;color:#ffd700;flex-shrink:0}
+
+/* ===== MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;justify-content:center;align-items:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:620px;width:100%;max-height:85vh;overflow-y:auto;padding:0}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--card);border-radius:16px 16px 0 0;z-index:1}
+.modal-header h2{font-size:1.2em}
+.modal-close{background:none;border:none;color:var(--text2);font-size:1.5em;cursor:pointer;padding:4px 8px;border-radius:6px}
+.modal-close:hover{background:var(--hover);color:var(--text)}
+.modal-body{padding:16px 24px 24px}
+
+/* Event card with image */
+.event-card{
+  padding:14px;border-radius:10px;background:var(--card2);
+  margin-bottom:10px;cursor:pointer;transition:.2s;
+  border:1px solid transparent;
+}
+.event-card:hover{border-color:var(--accent)}
+.event-card:last-child{margin-bottom:0}
+.event-card.imp3{border-left:3px solid #ffd700}
+.event-card.imp2{border-left:3px solid var(--accent)}
+.event-card.imp1{border-left:3px solid var(--border)}
+
+.event-card-inner{display:flex;gap:12px;align-items:flex-start}
+.event-img-wrap{
+  flex-shrink:0;width:80px;height:80px;
+  border-radius:8px;overflow:hidden;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+  font-size:2em;
+  position:relative;
+}
+.event-img-wrap img{
+  width:100%;height:100%;object-fit:cover;
+  display:none;
+  border-radius:7px;
+}
+.event-img-wrap img.loaded{display:block}
+.event-img-placeholder{font-size:2em;line-height:1}
+.event-info{flex:1;min-width:0}
+.event-year{font-size:.8em;color:var(--text2);margin-bottom:4px}
+.event-title{font-size:1.05em;font-weight:600;margin-bottom:2px}
+.event-title-en{font-size:.85em;color:var(--text2);margin-bottom:6px}
+.event-desc{font-size:.88em;color:var(--text2);line-height:1.5}
+.event-ann-row{margin-top:5px}
+
+.anniversary{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.75em;font-weight:700;margin-right:4px}
+.anniversary.big{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+.anniversary.normal{background:rgba(255,255,255,.08);color:var(--text2)}
+.importance{margin-right:4px;font-size:.9em}
+.event-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:600;margin-left:6px;vertical-align:middle}
+.event-tag.game{background:rgba(63,185,80,.15);color:var(--game)}
+.event-tag.console{background:rgba(247,129,102,.15);color:var(--console)}
+.event-tag.event{background:rgba(210,168,255,.15);color:var(--event)}
+.event-tag.milestone{background:rgba(240,192,0,.15);color:var(--milestone)}
+.event-tag.upcoming{background:rgba(255,107,107,.15);color:var(--upcoming)}
+.link-icon{font-size:.8em;margin-left:4px;opacity:.5}
+
+/* Stats bar */
+.stats{text-align:center;padding:8px;color:var(--text2);font-size:.82em}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1200px){
+  .sidebar{width:220px}
+  .cal-cell{min-height:80px}
+}
+@media(max-width:900px){
+  .main-layout{flex-direction:column}
+  .sidebar{width:100%}
+  .sidebar-left{order:0}
+  .sidebar-right{order:0}
+  .sidebar-list{max-height:200px}
+  .cal-cell{min-height:72px}
+}
+@media(max-width:767px){
+  /* Hide desktop calendar on mobile */
+  .calendar-container{display:none}
+  .month-nav{display:flex}
+
+  /* Show timeline */
+  .mobile-timeline{display:block}
+
+  .modal{max-width:100%;border-radius:12px}
+  .event-img-wrap{width:64px;height:64px}
+  .event-card-inner{gap:8px}
+}
+@media(min-width:768px){
+  .mobile-timeline{display:none !important}
+}
+@media(max-width:480px){
+  .header h1{font-size:1.3em}
+  .tl-day{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🎮 游戏大事件日历</h1>
+  <p>Gaming History Calendar · 1980s – Future</p>
+</div>
+<div class="filters">
+  <button class="filter-btn active" data-type="all">全部</button>
+  <button class="filter-btn" data-type="game">🎮 游戏发售</button>
+  <button class="filter-btn" data-type="console">🕹️ 主机发售</button>
+  <button class="filter-btn" data-type="event">📅 展会活动</button>
+  <button class="filter-btn" data-type="milestone">⭐ 里程碑</button>
+  <button class="filter-btn" data-type="upcoming">🔥 即将发售</button>
+</div>
+<div class="stats" id="stats"></div>
+<div class="month-nav">
+  <button id="prevMonth">◀ 上月</button>
+  <span class="month-label" id="monthLabel"></span>
+  <button id="nextMonth">下月 ▶</button>
+</div>
+
+<!-- Desktop: 3-column layout with calendar -->
+<div class="main-layout">
+  <div class="sidebar sidebar-left" id="sidebarAnn">
+    <h3 class="sidebar-title" id="sidebarAnnTitle">🎉 整周年纪念</h3>
+    <div class="sidebar-list" id="sidebarAnnList"></div>
+  </div>
+  <div class="calendar-container">
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+  <div class="sidebar sidebar-right" id="sidebar">
+    <h3 class="sidebar-title" id="sidebarTitle">📌 本月重点</h3>
+    <div class="sidebar-list" id="sidebarList"></div>
+  </div>
+</div>
+
+<!-- Mobile: timeline list view -->
+<div class="mobile-timeline" id="mobileTimeline"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const EVENTS=EVENTS_PLACEHOLDER;
+
+const MONTH_NAMES=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+const DAY_NAMES=["日","一","二","三","四","五","六"];
+const TYPE_LABELS={game:"游戏发售",console:"主机发售",event:"展会活动",milestone:"里程碑",upcoming:"即将发售"};
+const TYPE_EMOJI={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
+const TYPE_FALLBACK={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
+
+let currentMonth=new Date().getMonth();
+let activeFilter="all";
+
+// Wikipedia image cache
+const wikiCache={};
+
+function getWikiTitle(wikiUrl){
+  if(!wikiUrl)return null;
+  try{
+    const url=new URL(wikiUrl);
+    const parts=url.pathname.split('/wiki/');
+    if(parts.length>1)return decodeURIComponent(parts[1]);
+  }catch(e){}
+  return null;
+}
+
+async function fetchWikiImage(wikiUrl,imgEl,placeholderEl,type){
+  const title=getWikiTitle(wikiUrl);
+  if(!title){
+    if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+    return;
+  }
+  const cacheKey='wiki_img_'+title;
+
+  // Check sessionStorage first
+  try{
+    const cached=sessionStorage.getItem(cacheKey);
+    if(cached){
+      if(cached==='null'){
+        if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+        return;
+      }
+      if(imgEl){imgEl.src=cached;imgEl.classList.add('loaded');if(placeholderEl)placeholderEl.style.display='none';}
+      return;
+    }
+  }catch(e){}
+
+  // In-memory cache
+  if(wikiCache[cacheKey]!==undefined){
+    const src=wikiCache[cacheKey];
+    if(!src){if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';return;}
+    if(imgEl){imgEl.src=src;imgEl.classList.add('loaded');if(placeholderEl)placeholderEl.style.display='none';}
+    return;
+  }
+
+  try{
+    const resp=await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const data=await resp.json();
+    const src=data.thumbnail&&data.thumbnail.source?data.thumbnail.source:null;
+    wikiCache[cacheKey]=src;
+    try{sessionStorage.setItem(cacheKey,src||'null');}catch(e){}
+    if(src&&imgEl){
+      imgEl.src=src;imgEl.classList.add('loaded');
+      if(placeholderEl)placeholderEl.style.display='none';
+    }else{
+      if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+    }
+  }catch(e){
+    wikiCache[cacheKey]=null;
+    try{sessionStorage.setItem(cacheKey,'null');}catch(ex){}
+    if(placeholderEl)placeholderEl.textContent=TYPE_FALLBACK[type]||'🎮';
+  }
+}
+
+// Index events by month-day
+const eventIndex={};
+EVENTS.forEach(e=>{
+  const key=`${e.month}-${e.day}`;
+  if(!eventIndex[key])eventIndex[key]=[];
+  eventIndex[key].push(e);
+});
+
+function getFilteredEvents(month,day){
+  const key=`${month}-${day}`;
+  const evts=eventIndex[key]||[];
+  if(activeFilter==="all")return evts;
+  return evts.filter(e=>e.type===activeFilter);
+}
+
+function getMonthFilteredCount(month){
+  let count=0;
+  for(let d=1;d<=31;d++){count+=getFilteredEvents(month+1,d).length;}
+  return count;
+}
+
+function getCellEventLabel(e){
+  const yr=new Date().getFullYear();
+  const years=yr-e.year;
+  const isBigAnn=years>0&&(years%10===0||years%25===0);
+  const isAnn=years>0&&years%5===0;
+  const emoji=TYPE_EMOJI[e.type]||'🎮';
+  let prefix=emoji+' ';
+  if(isBigAnn||isAnn){
+    prefix=`🎉${years}周年 `;
+  }
+  return prefix+'《'+e.title_cn.replace(/^《|》$/g,'')+'》';
+}
+
+function render(){
+  const today=new Date();
+  const year=today.getFullYear();
+  const m=currentMonth;
+  const firstDay=new Date(year,m,1).getDay();
+  const daysInMonth=new Date(year,m+1,0).getDate();
+
+  document.getElementById("monthLabel").textContent=MONTH_NAMES[m];
+
+  const totalFiltered=activeFilter==="all"?EVENTS.length:EVENTS.filter(e=>e.type===activeFilter).length;
+  document.getElementById("stats").textContent=`共收录 ${totalFiltered} 个事件 · 本月 ${getMonthFilteredCount(m)} 个`;
+
+  /* ===== Desktop Calendar Grid ===== */
+  const yr=year;
+  let html=DAY_NAMES.map(d=>`<div class="cal-head">${d}</div>`).join("");
+
+  for(let i=0;i<firstDay;i++){
+    html+=`<div class="cal-cell empty"><span class="day-num"></span></div>`;
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getFilteredEvents(m+1,d);
+    const isToday=(d===today.getDate()&&m===today.getMonth());
+    const cls=["cal-cell"];
+    if(evts.length)cls.push("has-events");
+    if(isToday)cls.push("today");
+    const hasMajor=evts.some(e=>(e.importance||1)>=3);
+    const hasAnn=evts.some(e=>{const a=yr-e.year;return a>0&&(a%10===0||a%25===0);});
+    if(hasMajor)cls.push('has-major');
+    const annBadge=hasAnn?'<span class="ann-badge">🎂</span>':'';
+
+    let eventsHTML='';
+    if(evts.length){
+      const MAX_SHOW=3;
+      const shown=evts.slice(0,MAX_SHOW);
+      shown.forEach(e=>{
+        const imp=e.importance||1;
+        const impCls=imp>=3?'imp-high':imp>=2?'imp-mid':'imp-low';
+        const label=getCellEventLabel(e);
+        eventsHTML+=`<div class="cell-event-item type-${e.type} ${impCls}" title="${e.title_cn} (${e.year})">${label}</div>`;
+      });
+      if(evts.length>MAX_SHOW){
+        eventsHTML+=`<div class="cell-more">+${evts.length-MAX_SHOW} 更多</div>`;
+      }
+    }
+
+    html+=`<div class="${cls.join(" ")}" data-day="${d}">
+      ${annBadge}
+      <span class="day-num">${d}</span>
+      <div class="cell-events">${eventsHTML}</div>
+    </div>`;
+  }
+
+  document.getElementById("calGrid").innerHTML=html;
+
+  document.querySelectorAll(".cal-cell.has-events").forEach(cell=>{
+    cell.addEventListener("click",()=>{
+      const day=parseInt(cell.dataset.day);
+      openModal(m+1,day);
+    });
+  });
+
+  /* ===== Mobile Timeline ===== */
+  let tlHTML='';
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getFilteredEvents(m+1,d);
+    if(!evts.length)continue;
+    const isToday=(d===today.getDate()&&m===today.getMonth());
+    const dt=new Date(year,m,d);
+    const wd=DAY_NAMES[dt.getDay()];
+    const todayCls=isToday?'today-col':'';
+    let evtItems='';
+    evts.forEach(e=>{
+      const imp=e.importance||1;
+      const impCls=imp>=3?'imp-high':imp>=2?'imp-mid':'imp-low';
+      const years=yr-e.year;
+      const isBigAnn=years>0&&(years%10===0||years%25===0);
+      const isAnn=years>0&&years%5===0;
+      let annTag='';
+      if(isBigAnn)annTag=`<span class="tl-ann-tag">🎉${years}周年</span>`;
+      else if(isAnn)annTag=`<span class="tl-ann-tag">${years}周年</span>`;
+      const emoji=TYPE_EMOJI[e.type]||'🎮';
+      evtItems+=`<div class="tl-event-item type-${e.type} ${impCls}">${emoji} ${e.title_cn}${annTag?'&nbsp;'+annTag:''}</div>`;
+    });
+    tlHTML+=`<div class="tl-day" data-month="${m+1}" data-day="${d}">
+      <div class="tl-date-col ${todayCls}">
+        <div class="tl-date-num">${d}</div>
+        <div class="tl-date-wd">${wd}</div>
+      </div>
+      <div class="tl-events-col">${evtItems}</div>
+    </div>`;
+  }
+  document.getElementById('mobileTimeline').innerHTML=tlHTML||'<div style="text-align:center;padding:40px;color:var(--text2)">本月暂无事件</div>';
+  document.querySelectorAll('.tl-day').forEach(row=>{
+    row.addEventListener('click',()=>{
+      openModal(parseInt(row.dataset.month),parseInt(row.dataset.day));
+    });
+  });
+
+  /* ===== Left Sidebar: Whole-year anniversaries ===== */
+  let allYearAnns=[];
+  EVENTS.forEach(e=>{
+    const years=yr-e.year;
+    const isBigAnn=years>0&&(years%10===0||years%25===0);
+    if(isBigAnn){allYearAnns.push({...e,years,isThisMonth:e.month===m+1});}
+  });
+  allYearAnns.sort((a,b)=>a.month!==b.month?a.month-b.month:a.day-b.day);
+  let annHTML='';
+  if(allYearAnns.length){
+    allYearAnns.forEach(h=>{
+      const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
+      const isCurrent=h.isThisMonth?'sb-current':'';
+      const stars='⭐'.repeat(h.importance||1);
+      annHTML+=`<div class="sb-card ${impCls} ${isCurrent}" onclick="window.open('${h.wiki}','_blank')">
+        <div class="sb-date">${h.month}月${h.day}日 · ${h.year}年 ${stars}</div>
+        <div class="sb-name">${h.title_cn}</div>
+        <div class="sb-ann">🎉 ${h.years}周年</div>
+      </div>`;
+    });
+  }else{
+    annHTML='<div class="sb-empty">今年暂无整周年事件</div>';
+  }
+  document.getElementById('sidebarAnnTitle').textContent=`🎉 ${yr}年整周年纪念 (${allYearAnns.length})`;
+  document.getElementById('sidebarAnnList').innerHTML=annHTML;
+
+  /* ===== Right Sidebar: This month's highlights ===== */
+  let highlights=[];
+  for(let d=1;d<=daysInMonth;d++){
+    const evts=getFilteredEvents(m+1,d);
+    evts.forEach(e=>{
+      const years=yr-e.year;
+      const isFuture=years<0;
+      const imp=e.importance||1;
+      if(imp>=2||isFuture){highlights.push({...e,day:d,years,isFuture});}
+    });
+  }
+  highlights.sort((a,b)=>{
+    if((a.importance||1)!==(b.importance||1))return (b.importance||1)-(a.importance||1);
+    return a.day-b.day;
+  });
+  let sbHTML='';
+  if(highlights.length){
+    highlights.forEach(h=>{
+      const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
+      const stars='⭐'.repeat(h.importance||1);
+      let annText='';
+      if(h.isFuture){annText='🔥 即将发售';}
+      else if(h.years>0){annText=h.years+'周年';}
+      sbHTML+=`<div class="sb-card ${impCls}" onclick="window.open('${h.wiki}','_blank')">
+        <div class="sb-date">${m+1}月${h.day}日 · ${h.year}年 ${stars}</div>
+        <div class="sb-name">${h.title_cn}</div>
+        ${annText?`<div class="sb-ann">${annText}</div>`:''}
+      </div>`;
+    });
+  }else{
+    sbHTML='<div class="sb-empty">本月暂无重点事件</div>';
+  }
+  document.getElementById('sidebarTitle').textContent=`📌 ${MONTH_NAMES[m]}重点事件 (${highlights.length})`;
+  document.getElementById('sidebarList').innerHTML=sbHTML;
+}
+
+function openModal(month,day){
+  const evts=getFilteredEvents(month,day);
+  if(!evts.length)return;
+  evts.sort((a,b)=>a.year-b.year);
+  document.getElementById("modalTitle").textContent=`${month}月${day}日 · ${evts.length}个事件`;
+
+  const thisYear=new Date().getFullYear();
+  let html="";
+  const cardData=[];
+
+  evts.forEach((e,idx)=>{
+    const years=thisYear-e.year;
+    const isFuture=years<0;
+    let annHTML='';
+    if(!isFuture&&years>0){
+      const isBig=(years%10===0)||(years%25===0);
+      const cls=isBig?'big':'normal';
+      const suffix=isBig?' 🎉':'';
+      annHTML=`<span class="anniversary ${cls}">${years}周年${suffix}</span>`;
+    }
+    const imp=e.importance||1;
+    const impStars='⭐'.repeat(imp);
+    const impCls=`imp${imp}`;
+    const cardId=`ecard-${month}-${day}-${idx}`;
+
+    html+=`<div class="event-card ${impCls}" id="${cardId}" onclick="window.open('${e.wiki}','_blank')">
+      <div class="event-card-inner">
+        <div class="event-img-wrap" id="imgwrap-${cardId}">
+          <span class="event-img-placeholder" id="ph-${cardId}">${TYPE_EMOJI[e.type]||'🎮'}</span>
+          <img id="img-${cardId}" alt="${e.title_en}" onerror="this.style.display='none';document.getElementById('ph-${cardId}').style.display='';" />
+        </div>
+        <div class="event-info">
+          <div class="event-year"><span class="importance">${impStars}</span>${e.year}年 <span class="event-tag ${e.type}">${TYPE_LABELS[e.type]}</span></div>
+          <div class="event-title">${e.title_cn} <span class="link-icon">🔗</span></div>
+          <div class="event-title-en">${e.title_en}</div>
+          <div class="event-desc">${e.desc}</div>
+          ${annHTML?`<div class="event-ann-row">${annHTML}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+    cardData.push({id:cardId,wiki:e.wiki,type:e.type});
+  });
+
+  document.getElementById("modalBody").innerHTML=html;
+  document.getElementById("modal").classList.add("open");
+
+  // Async load wiki images after modal renders
+  cardData.forEach(({id,wiki,type})=>{
+    const imgEl=document.getElementById('img-'+id);
+    const phEl=document.getElementById('ph-'+id);
+    fetchWikiImage(wiki,imgEl,phEl,type);
+  });
+}
+
+/* ===== Event Listeners ===== */
+document.getElementById("modalClose").addEventListener("click",()=>{
+  document.getElementById("modal").classList.remove("open");
+});
+document.getElementById("modal").addEventListener("click",e=>{
+  if(e.target===document.getElementById("modal"))
+    document.getElementById("modal").classList.remove("open");
+});
+document.getElementById("prevMonth").addEventListener("click",()=>{
+  currentMonth=(currentMonth-1+12)%12;render();
+});
+document.getElementById("nextMonth").addEventListener("click",()=>{
+  currentMonth=(currentMonth+1)%12;render();
+});
+document.querySelectorAll(".filter-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter=btn.dataset.type;
+    render();
+  });
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape")document.getElementById("modal").classList.remove("open");
+  if(e.key==="ArrowLeft"){currentMonth=(currentMonth-1+12)%12;render();}
+  if(e.key==="ArrowRight"){currentMonth=(currentMonth+1)%12;render();}
+});
+
+render();
+</script>
+</body>
+</html>
