@@ -188,6 +188,71 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 /* Stats bar */
 .stats{text-align:center;padding:8px;color:var(--text2);font-size:.82em}
 
+/* ===== SEARCH ===== */
+.search-wrap{display:flex;justify-content:center;padding:8px 20px 4px}
+.search-box{position:relative;width:100%;max-width:500px}
+.search-box input{
+  width:100%;padding:9px 36px 9px 36px;
+  border-radius:24px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-size:.95em;
+  outline:none;transition:.2s;
+}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.15)}
+.search-box input::placeholder{color:var(--text2)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:1em;pointer-events:none;color:var(--text2)}
+.search-clear{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--text2);cursor:pointer;
+  font-size:1em;padding:2px 4px;border-radius:50%;display:none;
+  line-height:1;
+}
+.search-clear:hover{color:var(--text);background:var(--hover)}
+.search-results{
+  display:none;
+  max-width:1800px;margin:0 auto;
+  padding:10px 10px 40px;
+}
+.search-results-inner{
+  max-width:860px;margin:0 auto;
+}
+.search-count{color:var(--text2);font-size:.85em;margin-bottom:12px;padding:0 4px}
+.search-empty{text-align:center;padding:60px 20px;color:var(--text2);font-size:1em}
+.search-year-group{margin-bottom:24px}
+.search-year-label{
+  font-size:.85em;font-weight:700;color:var(--accent);
+  padding:4px 0 10px;border-bottom:1px solid var(--border);margin-bottom:10px;
+}
+.search-card{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px;border-radius:10px;background:var(--card);
+  border:1px solid var(--border);margin-bottom:8px;
+  cursor:pointer;transition:.2s;
+}
+.search-card:hover{border-color:var(--accent);background:var(--hover)}
+.search-card.imp3{border-left:3px solid #ffd700}
+.search-card.imp2{border-left:3px solid var(--accent)}
+.search-card-date{
+  flex-shrink:0;min-width:70px;
+  text-align:center;padding-top:2px;
+}
+.search-card-date .sc-month-day{font-size:1.1em;font-weight:700;color:var(--text);line-height:1}
+.search-card-date .sc-year{font-size:.75em;color:var(--text2);margin-top:2px}
+.search-card-body{flex:1;min-width:0}
+.search-card-title{font-size:1em;font-weight:600;margin-bottom:2px}
+.search-card-title-en{font-size:.82em;color:var(--text2);margin-bottom:5px}
+.search-card-meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:5px}
+.search-card-desc{font-size:.85em;color:var(--text2);line-height:1.5}
+.sc-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:600}
+.sc-tag.game{background:rgba(63,185,80,.15);color:var(--game)}
+.sc-tag.console{background:rgba(247,129,102,.15);color:var(--console)}
+.sc-tag.event{background:rgba(210,168,255,.15);color:var(--event)}
+.sc-tag.milestone{background:rgba(240,192,0,.15);color:var(--milestone)}
+.sc-tag.upcoming{background:rgba(255,107,107,.15);color:var(--upcoming)}
+.sc-imp{font-size:.85em}
+.sc-ann{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72em;font-weight:700}
+.sc-ann.big{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+.sc-ann.normal{background:rgba(255,255,255,.08);color:var(--text2)}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1200px){
   .sidebar{width:220px}
@@ -242,6 +307,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button class="filter-btn" data-type="upcoming">🔥 即将发售</button>
 </div>
 <div class="stats" id="stats"></div>
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索游戏、主机、事件… 支持中文、英文、年份" autocomplete="off" />
+    <button class="search-clear" id="searchClear" title="清空搜索">✕</button>
+  </div>
+</div>
 <div class="month-nav">
   <button id="prevMonth">◀ 上月</button>
   <span class="month-label" id="monthLabel"></span>
@@ -260,6 +332,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div class="sidebar sidebar-right" id="sidebar">
     <h3 class="sidebar-title" id="sidebarTitle">📌 本月重点</h3>
     <div class="sidebar-list" id="sidebarList"></div>
+  </div>
+</div>
+
+<!-- Search results panel -->
+<div class="search-results" id="searchResults">
+  <div class="search-results-inner">
+    <div class="search-count" id="searchCount"></div>
+    <div id="searchResultsBody"></div>
   </div>
 </div>
 
@@ -662,9 +742,154 @@ document.querySelectorAll(".filter-btn").forEach(btn=>{
   });
 });
 document.addEventListener("keydown",e=>{
-  if(e.key==="Escape")document.getElementById("modal").classList.remove("open");
-  if(e.key==="ArrowLeft"){currentMonth=(currentMonth-1+12)%12;render();}
-  if(e.key==="ArrowRight"){currentMonth=(currentMonth+1)%12;render();}
+  if(e.key==="Escape"){
+    document.getElementById("modal").classList.remove("open");
+    // Also clear search on Escape if focused
+    if(document.activeElement===document.getElementById('searchInput')){
+      clearSearch();
+    }
+  }
+  if(!document.getElementById('searchResults').style.display||document.getElementById('searchResults').style.display==='none'){
+    if(e.key==="ArrowLeft"){currentMonth=(currentMonth-1+12)%12;render();}
+    if(e.key==="ArrowRight"){currentMonth=(currentMonth+1)%12;render();}
+  }
+});
+
+/* ===== SEARCH LOGIC ===== */
+let searchDebounceTimer=null;
+
+function performSearch(query){
+  const trimmed=query.trim();
+  const resultsEl=document.getElementById('searchResults');
+  const calendarArea=document.querySelector('.main-layout');
+  const mobileTimeline=document.getElementById('mobileTimeline');
+  const monthNav=document.querySelector('.month-nav');
+
+  if(!trimmed){
+    // Restore calendar view
+    resultsEl.style.display='none';
+    calendarArea.style.display='';
+    mobileTimeline.style.display='';
+    monthNav.style.display='';
+    document.getElementById('searchClear').style.display='none';
+    return;
+  }
+
+  // Show clear button
+  document.getElementById('searchClear').style.display='';
+
+  // Tokenize by whitespace, all tokens must match (AND)
+  const tokens=trimmed.toLowerCase().split(/\s+/).filter(Boolean);
+
+  const year=new Date().getFullYear();
+
+  const matched=EVENTS.filter(e=>{
+    const haystack=[
+      e.title_cn||'',
+      e.title_en||'',
+      e.desc||'',
+      String(e.year||''),
+      String(e.month||''),
+      TYPE_LABELS[e.type]||'',
+      e.type||''
+    ].join(' ').toLowerCase();
+    return tokens.every(t=>haystack.includes(t));
+  });
+
+  // Sort by year then month then day
+  matched.sort((a,b)=>{
+    if(a.year!==b.year)return a.year-b.year;
+    if(a.month!==b.month)return a.month-b.month;
+    return a.day-b.day;
+  });
+
+  // Hide calendar, show results
+  calendarArea.style.display='none';
+  mobileTimeline.style.display='none';
+  monthNav.style.display='none';
+  resultsEl.style.display='';
+
+  document.getElementById('searchCount').textContent=
+    matched.length>0?`找到 ${matched.length} 个匹配事件（关键词："${trimmed}"）`:`共搜索 ${EVENTS.length} 个事件`;
+
+  if(!matched.length){
+    document.getElementById('searchResultsBody').innerHTML=
+      '<div class="search-empty">😶 未找到相关事件，换个关键词试试？</div>';
+    return;
+  }
+
+  // Group by year
+  const groups={};
+  matched.forEach(e=>{
+    if(!groups[e.year])groups[e.year]=[];
+    groups[e.year].push(e);
+  });
+
+  let html='';
+  Object.keys(groups).sort((a,b)=>Number(a)-Number(b)).forEach(yr=>{
+    html+=`<div class="search-year-group">`;
+    html+=`<div class="search-year-label">${yr} 年 · ${groups[yr].length} 个事件</div>`;
+    groups[yr].forEach(e=>{
+      const years=year-e.year;
+      const isFuture=years<0;
+      const imp=e.importance||1;
+      const impCls=imp>=3?'imp3':imp>=2?'imp2':'';
+      const stars='⭐'.repeat(imp);
+      let annHTML='';
+      if(!isFuture&&years>0){
+        const isBig=(years%10===0)||(years%25===0);
+        const cls=isBig?'big':'normal';
+        const suffix=isBig?' 🎉':'';
+        annHTML=`<span class="sc-ann ${cls}">${years}周年${suffix}</span>`;
+      }
+      const emoji=TYPE_EMOJI[e.type]||'🎮';
+      html+=`<div class="search-card ${impCls}" data-month="${e.month}" data-day="${e.day}" onclick="handleSearchCardClick(${e.month},${e.day})">
+        <div class="search-card-date">
+          <div class="sc-month-day">${e.month}月${e.day}日</div>
+          <div class="sc-year">${e.year}</div>
+        </div>
+        <div class="search-card-body">
+          <div class="search-card-title">${e.title_cn}</div>
+          <div class="search-card-title-en">${e.title_en}</div>
+          <div class="search-card-meta">
+            <span class="sc-tag ${e.type}">${emoji} ${TYPE_LABELS[e.type]||e.type}</span>
+            <span class="sc-imp">${stars}</span>
+            ${annHTML}
+          </div>
+          ${e.desc?`<div class="search-card-desc">${e.desc}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+
+  document.getElementById('searchResultsBody').innerHTML=html;
+}
+
+function handleSearchCardClick(month,day){
+  // Navigate to the month and open modal
+  clearSearch();
+  currentMonth=month-1;
+  render();
+  // Small delay to let calendar render
+  setTimeout(()=>openModal(month,day),80);
+}
+
+function clearSearch(){
+  const input=document.getElementById('searchInput');
+  input.value='';
+  performSearch('');
+}
+
+// Debounced input handler
+document.getElementById('searchInput').addEventListener('input',function(){
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer=setTimeout(()=>performSearch(this.value),300);
+});
+
+document.getElementById('searchClear').addEventListener('click',()=>{
+  clearSearch();
+  document.getElementById('searchInput').focus();
 });
 
 render();
