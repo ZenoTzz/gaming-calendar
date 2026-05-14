@@ -41,6 +41,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .sb-card .sb-name{font-size:.9em;font-weight:600;margin:2px 0}
 .sb-card .sb-ann{font-size:.72em;font-weight:700;color:#ffd700}
 .sb-card .sb-desc{font-size:.78em;color:var(--text2);margin-top:3px;line-height:1.4}
+.sb-card.sb-current{background:var(--card2);border-color:var(--accent)}
+.sb-section{font-size:.85em;font-weight:700;color:var(--text);padding:10px 0 6px;margin-top:8px;border-bottom:1px solid var(--border)}
+.sb-section:first-child{margin-top:0}
 .sb-empty{color:var(--text2);font-size:.85em;padding:20px 0;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-head{text-align:center;font-size:.8em;color:var(--text2);padding:8px 0;font-weight:600}
@@ -233,6 +236,16 @@ function render(){
   // Render sidebar - highlights for this month
   const yr=new Date().getFullYear();
   let highlights=[];
+  // Collect big anniversaries from ALL months
+  let allYearAnns=[];
+  EVENTS.forEach(e=>{
+    const years=yr-e.year;
+    const isBigAnn=years>0&&(years%10===0||years%25===0);
+    if(isBigAnn){
+      allYearAnns.push({...e,years,isBigAnn:true,isFuture:false,isThisMonth:e.month===m+1});
+    }
+  });
+  // This month's important events (imp>=2 or upcoming)
   for(let d=1;d<=daysInMonth;d++){
     const evts=getFilteredEvents(m+1,d);
     evts.forEach(e=>{
@@ -240,28 +253,46 @@ function render(){
       const isFuture=years<0;
       const imp=e.importance||1;
       const isBigAnn=years>0&&(years%10===0||years%25===0);
-      if(imp>=2||isBigAnn||isFuture){
-        highlights.push({...e,day:d,years,isBigAnn,isFuture});
+      if((imp>=2&&!isBigAnn)||isFuture){
+        highlights.push({...e,day:d,years,isBigAnn:false,isFuture,isThisMonth:true});
       }
     });
   }
-  // Sort: big anniversaries first, then by importance, then by day
+  // Sort anniversaries: by month then day
+  allYearAnns.sort((a,b)=>{
+    if(a.month!==b.month)return a.month-b.month;
+    return a.day-b.day;
+  });
+  // Sort monthly highlights: big ann first, then importance, then day
   highlights.sort((a,b)=>{
-    if(a.isBigAnn!==b.isBigAnn)return a.isBigAnn?-1:1;
     if((a.importance||1)!==(b.importance||1))return (b.importance||1)-(a.importance||1);
     return a.day-b.day;
   });
   let sbHTML='';
-  if(highlights.length===0){
-    sbHTML='<div class="sb-empty">本月暂无重点事件</div>';
-  }else{
+  // Section 1: Year-round anniversaries
+  if(allYearAnns.length>0){
+    sbHTML+='<div class="sb-section">🎉 '+yr+'年整周年纪念 ('+allYearAnns.length+')</div>';
+    allYearAnns.forEach(h=>{
+      const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
+      const isCurrent=h.isThisMonth?'sb-current':'';
+      const stars='⭐'.repeat(h.importance||1);
+      const monthDay=h.month+'月'+h.day+'日';
+      sbHTML+=`<div class="sb-card ${impCls} ${isCurrent}" onclick="window.open('${h.wiki}','_blank')">
+        <div class="sb-date">${monthDay} · ${h.year}年 ${stars}</div>
+        <div class="sb-name">${h.title_cn}</div>
+        <div class="sb-ann">🎉 ${h.years}周年</div>
+      </div>`;
+    });
+  }
+  // Section 2: This month's other highlights
+  if(highlights.length>0){
+    sbHTML+='<div class="sb-section">📌 '+MONTH_NAMES[m]+'重点事件 ('+highlights.length+')</div>';
     highlights.forEach(h=>{
       const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
       const stars='⭐'.repeat(h.importance||1);
       let annText='';
       if(h.isFuture){annText='🔥 即将发售';}
-      else if(h.isBigAnn){annText=`🎉 ${h.years}周年`;}
-      else if(h.years>0){annText=`${h.years}周年`;}
+      else if(h.years>0){annText=h.years+'周年';}
       sbHTML+=`<div class="sb-card ${impCls}" onclick="window.open('${h.wiki}','_blank')">
         <div class="sb-date">${m+1}月${h.day}日 · ${h.year}年 ${stars}</div>
         <div class="sb-name">${h.title_cn}</div>
@@ -269,7 +300,10 @@ function render(){
       </div>`;
     });
   }
-  document.getElementById('sidebarTitle').textContent=`📌 ${MONTH_NAMES[m]}大事件 (${highlights.length})`;
+  if(!allYearAnns.length&&!highlights.length){
+    sbHTML='<div class="sb-empty">本月暂无重点事件</div>';
+  }
+  document.getElementById('sidebarTitle').textContent=`🌟 ${yr}年游戏大事记`;
   document.getElementById('sidebarList').innerHTML=sbHTML;
 }
 
