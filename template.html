@@ -196,10 +196,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 @media(max-width:900px){
   .main-layout{flex-direction:column}
   .sidebar{width:100%}
-  .sidebar-left{order:0}
-  .sidebar-right{order:0}
-  .sidebar-list{max-height:200px}
+  .sidebar-left{order:2}
+  .sidebar-right{order:3}
+  .sidebar-list{max-height:none}
   .cal-cell{min-height:72px}
+  .sidebar{position:static}
+  /* Collapsible sidebar on mobile */
+  .sidebar-title{cursor:pointer;user-select:none;position:relative;padding-right:30px}
+  .sidebar-title::after{content:'▼';position:absolute;right:0;font-size:.7em;transition:transform .2s}
+  .sidebar-title.collapsed::after{transform:rotate(-90deg)}
+  .sidebar-list.collapsed{display:none}
 }
 @media(max-width:767px){
   /* Hide desktop calendar on mobile */
@@ -539,14 +545,42 @@ function render(){
   document.getElementById('sidebarTitle').textContent=`📌 ${MONTH_NAMES[m]}重点事件 (${highlights.length})`;
   document.getElementById('sidebarList').innerHTML=sbHTML;
 
-  // Sync sidebar heights with calendar
+  // Sync sidebar heights with calendar (desktop only)
   requestAnimationFrame(()=>{
-    const calH=document.getElementById('calGrid').offsetHeight;
-    if(calH>0){
-      const titleH1=document.getElementById('sidebarAnnTitle').offsetHeight;
-      const titleH2=document.getElementById('sidebarTitle').offsetHeight;
-      document.getElementById('sidebarAnnList').style.maxHeight=(calH-titleH1-20)+'px';
-      document.getElementById('sidebarList').style.maxHeight=(calH-titleH2-20)+'px';
+    const isMobile=window.innerWidth<=900;
+    if(isMobile){
+      // Remove max-height on mobile
+      document.getElementById('sidebarAnnList').style.maxHeight='';
+      document.getElementById('sidebarList').style.maxHeight='';
+      // Default collapsed on mobile
+      ['sidebarAnnTitle','sidebarTitle'].forEach(id=>{
+        const title=document.getElementById(id);
+        const list=title.nextElementSibling;
+        if(!title.hasAttribute('data-collapse-init')){
+          title.classList.add('collapsed');
+          list.classList.add('collapsed');
+          title.setAttribute('data-collapse-init','1');
+          title.addEventListener('click',()=>{
+            title.classList.toggle('collapsed');
+            list.classList.toggle('collapsed');
+          });
+        }
+      });
+    }else{
+      const calH=document.getElementById('calGrid').offsetHeight;
+      if(calH>0){
+        const titleH1=document.getElementById('sidebarAnnTitle').offsetHeight;
+        const titleH2=document.getElementById('sidebarTitle').offsetHeight;
+        document.getElementById('sidebarAnnList').style.maxHeight=(calH-titleH1-20)+'px';
+        document.getElementById('sidebarList').style.maxHeight=(calH-titleH2-20)+'px';
+      }
+      // Remove collapsed state on desktop
+      ['sidebarAnnTitle','sidebarTitle'].forEach(id=>{
+        const title=document.getElementById(id);
+        const list=title.nextElementSibling;
+        title.classList.remove('collapsed');
+        list.classList.remove('collapsed');
+      });
     }
   });
 }
