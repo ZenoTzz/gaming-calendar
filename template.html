@@ -255,7 +255,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 /* ===== YEAR SELECTOR ===== */
 .year-selector-wrap{padding:8px 20px 0;display:flex;justify-content:center}
-.year-selector-inner{width:100%;max-width:500px;position:relative}
+.year-selector-inner{width:100%;max-width:900px;position:relative}
 .year-strip{
   display:flex;gap:6px;
   overflow-x:auto;scroll-behavior:smooth;
@@ -291,146 +291,83 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   margin:0 auto;
   padding:0 16px 60px;
 }
-.yr-hero{
+.yr-page{padding-top:20px}
+.yr-header{
   text-align:center;
-  padding:40px 20px 32px;
+  padding:30px 20px 24px;
   border-bottom:1px solid var(--border);
-  margin-bottom:36px;
+  margin-bottom:32px;
 }
-.yr-back-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 16px;
-  border-radius:20px;
-  border:1px solid var(--border);
-  background:transparent;
-  color:var(--text2);
-  cursor:pointer;
-  font-size:.85em;
-  transition:.2s;
-  margin-bottom:28px;
-}
-.yr-back-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.08)}
-.yr-year-num{
-  font-size:5em;
+.yr-header h1{
+  font-size:4em;
   font-weight:900;
   line-height:1;
   background:linear-gradient(135deg,var(--accent),var(--event),var(--game));
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   margin-bottom:8px;
-  letter-spacing:-2px;
-}
-.yr-title{
-  font-size:1.6em;
-  font-weight:700;
-  color:var(--text);
-  margin-bottom:10px;
 }
 .yr-subtitle{
-  font-size:1.05em;
+  font-size:1.1em;
   color:var(--text2);
   font-style:italic;
-  line-height:1.6;
 }
 .yr-section{
-  margin-bottom:36px;
+  margin-bottom:32px;
 }
-.yr-section-title{
-  font-size:1.25em;
+.yr-section h2{
+  font-size:1.2em;
   font-weight:700;
+  color:var(--accent);
+  margin-bottom:12px;
+  padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.yr-content{
+  font-size:.95em;
+  line-height:1.8;
   color:var(--text);
-  padding:14px 0 12px;
-  border-bottom:2px solid var(--border);
-  margin-bottom:18px;
-  display:flex;align-items:center;gap:8px;
 }
-.yr-section-title::before{
-  content:'';
-  display:inline-block;
-  width:4px;height:1.2em;
-  background:linear-gradient(180deg,var(--accent),var(--event));
-  border-radius:2px;
-  flex-shrink:0;
-}
-.yr-content p{
-  color:var(--text2);
-  line-height:1.85;
-  margin-bottom:14px;
-  font-size:.97em;
-}
-.yr-content strong{color:var(--text);font-weight:600}
-.yr-content em{color:var(--accent);font-style:normal}
-.yr-content ul,.yr-content ol{
-  padding-left:20px;
-  margin-bottom:14px;
-}
-.yr-content li{
-  color:var(--text2);
-  line-height:1.75;
-  margin-bottom:6px;
-  font-size:.97em;
-}
-.yr-content li::marker{color:var(--accent)}
-.yr-content blockquote{
-  border-left:3px solid var(--accent);
-  padding:10px 16px;
-  margin:16px 0;
-  background:rgba(88,166,255,.06);
-  border-radius:0 8px 8px 0;
-}
-.yr-content blockquote p{
-  margin-bottom:0;
-  color:var(--text);
-  font-style:italic;
-}
-.yr-event-grid{
+.yr-content p{margin-bottom:12px}
+.yr-content ul{margin:8px 0 12px 20px}
+.yr-content li{margin-bottom:6px}
+.yr-content strong{color:var(--text)}
+.yr-content em{color:var(--text2)}
+.yr-events-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
   gap:10px;
-  margin:14px 0;
 }
-.yr-event-chip{
-  padding:10px 14px;
-  border-radius:10px;
+.yr-event-card{
+  padding:10px 12px;
+  border-radius:8px;
   background:var(--card);
   border:1px solid var(--border);
-  transition:.2s;
-  cursor:default;
-}
-.yr-event-chip.type-game{border-left:3px solid var(--game)}
-.yr-event-chip.type-console{border-left:3px solid var(--console)}
-.yr-event-chip.type-event{border-left:3px solid var(--event)}
-.yr-event-chip.type-milestone{border-left:3px solid var(--milestone)}
-.yr-event-chip.type-upcoming{border-left:3px solid var(--upcoming)}
-.yr-event-chip:hover{border-color:var(--accent);background:var(--hover)}
-.yr-chip-title{font-size:.92em;font-weight:600;color:var(--text);margin-bottom:3px}
-.yr-chip-date{font-size:.75em;color:var(--text2)}
-.yr-chip-desc{font-size:.78em;color:var(--text2);margin-top:4px;line-height:1.4}
-.yr-nav{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:24px 0 0;
-  border-top:1px solid var(--border);
-  margin-top:40px;
-}
-.yr-nav-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 18px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--card);
-  color:var(--text2);
   cursor:pointer;
-  font-size:.9em;
   transition:.2s;
 }
-.yr-nav-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--hover)}
-.yr-nav-btn.disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
-@media(max-width:600px){
-  .yr-year-num{font-size:3.5em}
-  .yr-title{font-size:1.25em}
-  .yr-event-grid{grid-template-columns:1fr}
-  .year-review{padding:0 10px 40px}
+.yr-event-card:hover{border-color:var(--accent);background:var(--hover)}
+.yr-event-card.imp3{border-left:3px solid #ffd700}
+.yr-event-card.imp2{border-left:3px solid var(--accent)}
+.yr-ev-date{font-size:.72em;color:var(--text2)}
+.yr-ev-name{font-size:.9em;font-weight:600;margin:2px 0}
+.yr-ev-en{font-size:.78em;color:var(--text2)}
+.yr-back{
+  text-align:center;
+  padding:30px 0;
 }
+.yr-back button{
+  padding:10px 24px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+  font-size:.95em;
+  transition:.2s;
+}
+.yr-back button:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.1)}
+.yr-btn{font-family:inherit}
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:1200px){
@@ -553,6 +490,105 @@ const DAY_NAMES=["日","一","二","三","四","五","六"];
 const TYPE_LABELS={game:"游戏发售",console:"主机发售",event:"展会活动",milestone:"里程碑",upcoming:"即将发售"};
 const TYPE_EMOJI={game:"🎮",console:"🕹️",event:"📅",milestone:"🏆",upcoming:"🔥"};
 const TYPE_FALLBACK={game:"🎮",console:"🕹️",event:"📅",milestone:"🏆",upcoming:"🔥"};
+
+YEAR_REVIEWS_PLACEHOLDER
+
+let selectedYear=null;
+
+function initYearSelector(){
+  const years=[...new Set(EVENTS.map(e=>e.year))].sort((a,b)=>a-b);
+  const strip=document.getElementById('yearStrip');
+  let html='<button class="yr-btn active" data-yr="">\u5168\u90e8</button>';
+  years.forEach(y=>{
+    html+=`<button class="yr-btn" data-yr="${y}">${y}</button>`;
+  });
+  strip.innerHTML=html;
+  strip.querySelectorAll('.yr-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      strip.querySelectorAll('.yr-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const yr=btn.dataset.yr;
+      if(!yr){
+        selectedYear=null;
+        document.getElementById('yearReview').style.display='none';
+        document.getElementById('yearReview').innerHTML='';
+        document.querySelector('.main-layout').style.display='';
+        document.getElementById('monthNav').style.display='';
+        return;
+      }
+      selectedYear=parseInt(yr);
+      showYearReview(selectedYear);
+    });
+  });
+}
+
+function showYearReview(year){
+  const review=typeof YEAR_REVIEWS!=='undefined'?YEAR_REVIEWS[year]:null;
+  const yearEvents=EVENTS.filter(e=>e.year===year).sort((a,b)=>a.month-b.month||a.day-b.day);
+  const thisYear=new Date().getFullYear();
+  
+  let html='<div class="yr-page">';
+  html+=`<div class="yr-header"><h1>${year}\u5e74</h1>`;
+  if(review){
+    html+=`<p class="yr-subtitle">${review.subtitle}</p>`;
+  }
+  html+='</div>';
+  
+  if(review){
+    review.sections.forEach(s=>{
+      html+=`<div class="yr-section"><h2>${s.title}</h2><div class="yr-content">${s.content}</div></div>`;
+    });
+  }else{
+    html+='<div class="yr-section"><h2>\ud83d\udcc5 \u672c\u5e74\u4e8b\u4ef6</h2><div class="yr-content">';
+    if(yearEvents.length){
+      html+='<ul>';
+      yearEvents.forEach(e=>{
+        const emoji=(typeof TYPE_EMOJI!=='undefined'?TYPE_EMOJI[e.type]:'')||'\ud83c\udfae';
+        const years=thisYear-e.year;
+        const ann=years>0&&(years%10===0||years%25===0)?` \ud83c\udf89 ${years}\u5468\u5e74`:'';
+        html+=`<li><strong>${e.month}\u6708${e.day}\u65e5</strong> ${emoji} ${e.title_cn}${e.title_en?' ('+e.title_en+')':''}${ann} \u2014 ${e.desc||''}</li>`;
+      });
+      html+='</ul>';
+    }else{
+      html+='<p>\u8be5\u5e74\u6682\u65e0\u6536\u5f55\u4e8b\u4ef6\u3002</p>';
+    }
+    html+='</div></div>';
+  }
+  
+  // Always show event list at bottom
+  if(review && yearEvents.length){
+    html+='<div class="yr-section"><h2>\ud83d\udcca \u672c\u5e74\u6536\u5f55\u4e8b\u4ef6 ('+yearEvents.length+')</h2><div class="yr-content"><div class="yr-events-grid">';
+    yearEvents.forEach(e=>{
+      const imp=e.importance||1;
+      const impCls=imp>=3?'imp3':imp>=2?'imp2':'';
+      const emoji=(typeof TYPE_EMOJI!=='undefined'?TYPE_EMOJI[e.type]:'')||'\ud83c\udfae';
+      html+=`<div class="yr-event-card ${impCls}" onclick="window.open('${e.wiki}','_blank')">
+        <div class="yr-ev-date">${e.month}\u6708${e.day}\u65e5</div>
+        <div class="yr-ev-name">${emoji} ${e.title_cn}</div>
+        <div class="yr-ev-en">${e.title_en}</div>
+      </div>`;
+    });
+    html+='</div></div></div>';
+  }
+  
+  html+='<div class="yr-back"><button onclick="clearYearReview()">\u2190 \u8fd4\u56de\u65e5\u5386</button></div>';
+  html+='</div>';
+  
+  document.getElementById('yearReview').innerHTML=html;
+  document.getElementById('yearReview').style.display='block';
+  document.querySelector('.main-layout').style.display='none';
+  document.getElementById('monthNav').style.display='none';
+}
+
+function clearYearReview(){
+  selectedYear=null;
+  document.getElementById('yearReview').style.display='none';
+  document.getElementById('yearReview').innerHTML='';
+  document.querySelector('.main-layout').style.display='';
+  document.getElementById('monthNav').style.display='';
+  document.querySelectorAll('.yr-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.yr-btn[data-yr=""]').classList.add('active');
+}
 
 let currentMonth=new Date().getMonth();
 let activeFilter="all";
@@ -1173,6 +1209,7 @@ document.getElementById('searchClear').addEventListener('click',()=>{
   document.getElementById('searchInput').focus();
 });
 
+initYearSelector();
 render();
 </script>
 </body>
