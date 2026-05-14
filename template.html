@@ -232,7 +232,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button class="filter-btn" data-type="game">🎮 游戏发售</button>
   <button class="filter-btn" data-type="console">🕹️ 主机发售</button>
   <button class="filter-btn" data-type="event">📅 展会活动</button>
-  <button class="filter-btn" data-type="milestone">⭐ 里程碑</button>
+  <button class="filter-btn" data-type="milestone">🏆 里程碑</button>
   <button class="filter-btn" data-type="upcoming">🔥 即将发售</button>
 </div>
 <div class="stats" id="stats"></div>
@@ -277,8 +277,8 @@ const EVENTS=EVENTS_PLACEHOLDER;
 const MONTH_NAMES=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
 const DAY_NAMES=["日","一","二","三","四","五","六"];
 const TYPE_LABELS={game:"游戏发售",console:"主机发售",event:"展会活动",milestone:"里程碑",upcoming:"即将发售"};
-const TYPE_EMOJI={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
-const TYPE_FALLBACK={game:"🎮",console:"🕹️",event:"📅",milestone:"⭐",upcoming:"🔥"};
+const TYPE_EMOJI={game:"🎮",console:"🕹️",event:"📅",milestone:"🏆",upcoming:"🔥"};
+const TYPE_FALLBACK={game:"🎮",console:"🕹️",event:"📅",milestone:"🏆",upcoming:"🔥"};
 
 let currentMonth=new Date().getMonth();
 let activeFilter="all";
