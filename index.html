@@ -253,6 +253,185 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .sc-ann.big{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
 .sc-ann.normal{background:rgba(255,255,255,.08);color:var(--text2)}
 
+/* ===== YEAR SELECTOR ===== */
+.year-selector-wrap{padding:8px 20px 0;display:flex;justify-content:center}
+.year-selector-inner{width:100%;max-width:500px;position:relative}
+.year-strip{
+  display:flex;gap:6px;
+  overflow-x:auto;scroll-behavior:smooth;
+  padding:6px 2px 10px;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.year-strip::-webkit-scrollbar{display:none}
+.year-btn{
+  flex-shrink:0;
+  padding:5px 12px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.82em;
+  transition:.2s;
+  white-space:nowrap;
+}
+.year-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.08)}
+.year-btn.active{
+  border-color:var(--accent);
+  color:var(--bg);
+  background:var(--accent);
+  font-weight:700;
+}
+
+/* ===== YEAR REVIEW PAGE ===== */
+.year-review{
+  display:none;
+  max-width:860px;
+  margin:0 auto;
+  padding:0 16px 60px;
+}
+.yr-hero{
+  text-align:center;
+  padding:40px 20px 32px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:36px;
+}
+.yr-back-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.85em;
+  transition:.2s;
+  margin-bottom:28px;
+}
+.yr-back-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.08)}
+.yr-year-num{
+  font-size:5em;
+  font-weight:900;
+  line-height:1;
+  background:linear-gradient(135deg,var(--accent),var(--event),var(--game));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:8px;
+  letter-spacing:-2px;
+}
+.yr-title{
+  font-size:1.6em;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:10px;
+}
+.yr-subtitle{
+  font-size:1.05em;
+  color:var(--text2);
+  font-style:italic;
+  line-height:1.6;
+}
+.yr-section{
+  margin-bottom:36px;
+}
+.yr-section-title{
+  font-size:1.25em;
+  font-weight:700;
+  color:var(--text);
+  padding:14px 0 12px;
+  border-bottom:2px solid var(--border);
+  margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.yr-section-title::before{
+  content:'';
+  display:inline-block;
+  width:4px;height:1.2em;
+  background:linear-gradient(180deg,var(--accent),var(--event));
+  border-radius:2px;
+  flex-shrink:0;
+}
+.yr-content p{
+  color:var(--text2);
+  line-height:1.85;
+  margin-bottom:14px;
+  font-size:.97em;
+}
+.yr-content strong{color:var(--text);font-weight:600}
+.yr-content em{color:var(--accent);font-style:normal}
+.yr-content ul,.yr-content ol{
+  padding-left:20px;
+  margin-bottom:14px;
+}
+.yr-content li{
+  color:var(--text2);
+  line-height:1.75;
+  margin-bottom:6px;
+  font-size:.97em;
+}
+.yr-content li::marker{color:var(--accent)}
+.yr-content blockquote{
+  border-left:3px solid var(--accent);
+  padding:10px 16px;
+  margin:16px 0;
+  background:rgba(88,166,255,.06);
+  border-radius:0 8px 8px 0;
+}
+.yr-content blockquote p{
+  margin-bottom:0;
+  color:var(--text);
+  font-style:italic;
+}
+.yr-event-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:10px;
+  margin:14px 0;
+}
+.yr-event-chip{
+  padding:10px 14px;
+  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  transition:.2s;
+  cursor:default;
+}
+.yr-event-chip.type-game{border-left:3px solid var(--game)}
+.yr-event-chip.type-console{border-left:3px solid var(--console)}
+.yr-event-chip.type-event{border-left:3px solid var(--event)}
+.yr-event-chip.type-milestone{border-left:3px solid var(--milestone)}
+.yr-event-chip.type-upcoming{border-left:3px solid var(--upcoming)}
+.yr-event-chip:hover{border-color:var(--accent);background:var(--hover)}
+.yr-chip-title{font-size:.92em;font-weight:600;color:var(--text);margin-bottom:3px}
+.yr-chip-date{font-size:.75em;color:var(--text2)}
+.yr-chip-desc{font-size:.78em;color:var(--text2);margin-top:4px;line-height:1.4}
+.yr-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:24px 0 0;
+  border-top:1px solid var(--border);
+  margin-top:40px;
+}
+.yr-nav-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.9em;
+  transition:.2s;
+}
+.yr-nav-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--hover)}
+.yr-nav-btn.disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+@media(max-width:600px){
+  .yr-year-num{font-size:3.5em}
+  .yr-title{font-size:1.25em}
+  .yr-event-grid{grid-template-columns:1fr}
+  .year-review{padding:0 10px 40px}
+}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1200px){
   .sidebar{width:220px}
@@ -314,7 +493,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <button class="search-clear" id="searchClear" title="清空搜索">✕</button>
   </div>
 </div>
-<div class="month-nav">
+<div class="year-selector-wrap" id="yearSelectorWrap">
+  <div class="year-selector-inner">
+    <div class="year-strip" id="yearStrip"></div>
+  </div>
+</div>
+
+<!-- Year Review Page -->
+<div class="year-review" id="yearReview"></div>
+
+<div class="month-nav" id="monthNav">
   <button id="prevMonth">◀ 上月</button>
   <span class="month-label" id="monthLabel"></span>
   <button id="nextMonth">下月 ▶</button>
@@ -462,7 +650,9 @@ function getCellEventLabel(e){
   if(isBigAnn||isAnn){
     prefix=`🎉${years}周年 `;
   }
-  return prefix+'《'+e.title_cn.replace(/^《|》$/g,'')+'》';
+  const name=e.title_cn.replace(/^《|》$/g,'');
+  const needBrackets=(e.type==='game'||e.type==='upcoming');
+  return prefix+(needBrackets?'《'+name+'》':name);
 }
 
 function render(){
