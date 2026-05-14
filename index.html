@@ -24,10 +24,29 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .filter-btn[data-type="event"].active{border-color:var(--event);color:var(--event);background:rgba(210,168,255,.1)}
 .filter-btn[data-type="milestone"].active{border-color:var(--milestone);color:var(--milestone);background:rgba(240,192,0,.1)}
 .filter-btn[data-type="upcoming"].active{border-color:var(--upcoming);color:var(--upcoming);background:rgba(255,107,107,.1)}
-.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px}
-.month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px}
+.month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
 .month-nav button:hover{background:var(--accent2);border-color:var(--accent)}
-.month-nav .month-label{font-size:1.3em;font-weight:700;min-width:120px;text-align:center}
+.month-dropdown{
+  padding:8px 14px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  font-size:1.1em;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  transition:.2s;
+  text-align:center;
+  min-width:100px;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b949e' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;
+  padding-right:28px;
+}
+.month-dropdown:hover,.month-dropdown:focus{border-color:var(--accent);outline:none}
+.month-dropdown option{background:var(--card);color:var(--text)}
 .main-layout{display:flex;max-width:1800px;margin:0 auto;padding:10px 10px 40px;gap:12px;align-items:start}
 .calendar-container{flex:1;min-width:0}
 .sidebar{width:220px;flex-shrink:0;position:sticky;top:10px}
@@ -463,9 +482,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div class="year-review" id="yearReview"></div>
 
 <div class="month-nav" id="monthNav">
-  <button id="prevMonth">◀ 上月</button>
-  <span class="month-label" id="monthLabel"></span>
-  <button id="nextMonth">下月 ▶</button>
+  <button id="prevMonth">◀</button>
+  <select class="month-dropdown" id="monthDropdown"></select>
+  <button id="nextMonth">▶</button>
 </div>
 
 <!-- Desktop: 3-column layout with calendar -->
@@ -903,7 +922,26 @@ function render(){
   const firstDay=new Date(year,m,1).getDay();
   const daysInMonth=new Date(year,m+1,0).getDate();
 
-  document.getElementById("monthLabel").textContent=MONTH_NAMES[m];
+  const md=document.getElementById('monthDropdown');
+  if(!md.options.length){
+    MONTH_NAMES.forEach((name,i)=>{
+      const opt=document.createElement('option');
+      opt.value=i;
+      const cnt=getMonthFilteredCount(i);
+      opt.textContent=name+(cnt?` (${cnt})`:'');
+      md.appendChild(opt);
+    });
+    md.addEventListener('change',()=>{
+      currentMonth=parseInt(md.value);
+      render();
+    });
+  }
+  md.value=m;
+  // Update option counts
+  Array.from(md.options).forEach((opt,i)=>{
+    const cnt=getMonthFilteredCount(i);
+    opt.textContent=MONTH_NAMES[i]+(cnt?` (${cnt})`:'');
+  });
 
   const totalFiltered=activeFilter==="all"?EVENTS.length:EVENTS.filter(e=>e.type===activeFilter).length;
   document.getElementById("stats").textContent=`共收录 ${totalFiltered} 个事件 · 本月 ${getMonthFilteredCount(m)} 个`;
