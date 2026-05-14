@@ -448,7 +448,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <body>
 <div class="header">
   <h1>🎮 游戏大事件日历</h1>
-  <p>Gaming History Calendar · 1980s – Future</p>
+  <p id="headerSub">Gaming History Calendar</p>
 </div>
 <div class="filters">
   <button class="filter-btn active" data-type="all">全部</button>
@@ -1290,6 +1290,10 @@ document.getElementById('searchClear').addEventListener('click',()=>{
 });
 
 initYearSelector();
+// Set header subtitle dynamically
+const _years=EVENTS.map(e=>e.year);
+const _minY=Math.min(..._years),_maxY=Math.max(..._years);
+document.getElementById('headerSub').textContent=`Gaming History Calendar \u00b7 ${_minY} \u2013 ${_maxY>new Date().getFullYear()?'Future':_maxY}`;
 render();
 </script>
 </body>
