@@ -28,9 +28,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:1em;transition:.2s}
 .month-nav button:hover{background:var(--accent2);border-color:var(--accent)}
 .month-nav .month-label{font-size:1.3em;font-weight:700;min-width:120px;text-align:center}
-.main-layout{display:flex;max-width:1200px;margin:0 auto;padding:10px 16px 40px;gap:20px}
+.main-layout{display:flex;max-width:1400px;margin:0 auto;padding:10px 16px 40px;gap:16px}
 .calendar-container{flex:1;min-width:0}
-.sidebar{width:320px;flex-shrink:0}
+.sidebar{width:280px;flex-shrink:0}
+.sidebar-left{order:-1}
+.sidebar-right{order:1}
 .sidebar-title{font-size:1em;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .sidebar-list{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 260px);overflow-y:auto}
 .sb-card{padding:10px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:.2s}
@@ -94,9 +96,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 /* Stats bar */
 .stats{text-align:center;padding:8px;color:var(--text2);font-size:.82em}
 
-@media(max-width:900px){
+@media(max-width:1100px){
   .main-layout{flex-direction:column}
-  .sidebar{width:100%;order:-1}
+  .sidebar{width:100%}
+  .sidebar-left{order:0}
+  .sidebar-right{order:0}
   .sidebar-list{max-height:200px}
 }
 @media(max-width:600px){
@@ -128,11 +132,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button id="nextMonth">下月 ▶</button>
 </div>
 <div class="main-layout">
+  <div class="sidebar sidebar-left" id="sidebarAnn">
+    <h3 class="sidebar-title" id="sidebarAnnTitle">🎉 整周年纪念</h3>
+    <div class="sidebar-list" id="sidebarAnnList"></div>
+  </div>
   <div class="calendar-container">
     <div class="cal-grid" id="calGrid"></div>
   </div>
-  <div class="sidebar" id="sidebar">
-    <h3 class="sidebar-title" id="sidebarTitle">📌 本月大事件</h3>
+  <div class="sidebar sidebar-right" id="sidebar">
+    <h3 class="sidebar-title" id="sidebarTitle">📌 本月重点</h3>
     <div class="sidebar-list" id="sidebarList"></div>
   </div>
 </div>
@@ -233,60 +241,54 @@ function render(){
     });
   });
 
-  // Render sidebar - highlights for this month
+  // === Left sidebar: Year-round anniversaries ===
   const yr=new Date().getFullYear();
-  let highlights=[];
-  // Collect big anniversaries from ALL months
   let allYearAnns=[];
   EVENTS.forEach(e=>{
     const years=yr-e.year;
     const isBigAnn=years>0&&(years%10===0||years%25===0);
     if(isBigAnn){
-      allYearAnns.push({...e,years,isBigAnn:true,isFuture:false,isThisMonth:e.month===m+1});
+      allYearAnns.push({...e,years,isThisMonth:e.month===m+1});
     }
   });
-  // This month's important events (imp>=2 or upcoming)
+  allYearAnns.sort((a,b)=>a.month!==b.month?a.month-b.month:a.day-b.day);
+  let annHTML='';
+  if(allYearAnns.length){
+    allYearAnns.forEach(h=>{
+      const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
+      const isCurrent=h.isThisMonth?'sb-current':'';
+      const stars='⭐'.repeat(h.importance||1);
+      annHTML+=`<div class="sb-card ${impCls} ${isCurrent}" onclick="window.open('${h.wiki}','_blank')">
+        <div class="sb-date">${h.month}月${h.day}日 · ${h.year}年 ${stars}</div>
+        <div class="sb-name">${h.title_cn}</div>
+        <div class="sb-ann">🎉 ${h.years}周年</div>
+      </div>`;
+    });
+  }else{
+    annHTML='<div class="sb-empty">今年暂无整周年事件</div>';
+  }
+  document.getElementById('sidebarAnnTitle').textContent=`🎉 ${yr}年整周年纪念 (${allYearAnns.length})`;
+  document.getElementById('sidebarAnnList').innerHTML=annHTML;
+
+  // === Right sidebar: This month's highlights ===
+  let highlights=[];
   for(let d=1;d<=daysInMonth;d++){
     const evts=getFilteredEvents(m+1,d);
     evts.forEach(e=>{
       const years=yr-e.year;
       const isFuture=years<0;
       const imp=e.importance||1;
-      const isBigAnn=years>0&&(years%10===0||years%25===0);
-      if((imp>=2&&!isBigAnn)||isFuture){
-        highlights.push({...e,day:d,years,isBigAnn:false,isFuture,isThisMonth:true});
+      if(imp>=2||isFuture){
+        highlights.push({...e,day:d,years,isFuture});
       }
     });
   }
-  // Sort anniversaries: by month then day
-  allYearAnns.sort((a,b)=>{
-    if(a.month!==b.month)return a.month-b.month;
-    return a.day-b.day;
-  });
-  // Sort monthly highlights: big ann first, then importance, then day
   highlights.sort((a,b)=>{
     if((a.importance||1)!==(b.importance||1))return (b.importance||1)-(a.importance||1);
     return a.day-b.day;
   });
   let sbHTML='';
-  // Section 1: Year-round anniversaries
-  if(allYearAnns.length>0){
-    sbHTML+='<div class="sb-section">🎉 '+yr+'年整周年纪念 ('+allYearAnns.length+')</div>';
-    allYearAnns.forEach(h=>{
-      const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
-      const isCurrent=h.isThisMonth?'sb-current':'';
-      const stars='⭐'.repeat(h.importance||1);
-      const monthDay=h.month+'月'+h.day+'日';
-      sbHTML+=`<div class="sb-card ${impCls} ${isCurrent}" onclick="window.open('${h.wiki}','_blank')">
-        <div class="sb-date">${monthDay} · ${h.year}年 ${stars}</div>
-        <div class="sb-name">${h.title_cn}</div>
-        <div class="sb-ann">🎉 ${h.years}周年</div>
-      </div>`;
-    });
-  }
-  // Section 2: This month's other highlights
-  if(highlights.length>0){
-    sbHTML+='<div class="sb-section">📌 '+MONTH_NAMES[m]+'重点事件 ('+highlights.length+')</div>';
+  if(highlights.length){
     highlights.forEach(h=>{
       const impCls=h.importance>=3?'sb-imp3':h.importance>=2?'sb-imp2':'';
       const stars='⭐'.repeat(h.importance||1);
@@ -299,11 +301,10 @@ function render(){
         ${annText?`<div class="sb-ann">${annText}</div>`:''}
       </div>`;
     });
-  }
-  if(!allYearAnns.length&&!highlights.length){
+  }else{
     sbHTML='<div class="sb-empty">本月暂无重点事件</div>';
   }
-  document.getElementById('sidebarTitle').textContent=`🌟 ${yr}年游戏大事记`;
+  document.getElementById('sidebarTitle').textContent=`📌 ${MONTH_NAMES[m]}重点事件 (${highlights.length})`;
   document.getElementById('sidebarList').innerHTML=sbHTML;
 }
 
