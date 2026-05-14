@@ -769,7 +769,7 @@ function performSearch(query){
     // Restore calendar view
     resultsEl.style.display='none';
     calendarArea.style.display='';
-    mobileTimeline.style.display='';
+    if(mobileTimeline)mobileTimeline.style.display='';
     monthNav.style.display='';
     document.getElementById('searchClear').style.display='none';
     return;
@@ -805,9 +805,9 @@ function performSearch(query){
 
   // Hide calendar, show results
   calendarArea.style.display='none';
-  mobileTimeline.style.display='none';
+  if(mobileTimeline)mobileTimeline.style.display='none';
   monthNav.style.display='none';
-  resultsEl.style.display='';
+  resultsEl.style.display='block';
 
   document.getElementById('searchCount').textContent=
     matched.length>0?`找到 ${matched.length} 个匹配事件（关键词："${trimmed}"）`:`共搜索 ${EVENTS.length} 个事件`;
